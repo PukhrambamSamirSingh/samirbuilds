@@ -2,7 +2,7 @@ from fastapi import status, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
 from jose import jwt
-from jwt.exceptions import InvalidTokenError, ExpiredSignatureError
+from jose.exceptions import JWTError, ExpiredSignatureError
 import os
 from dotenv import load_dotenv
 from bson.errors import InvalidId
@@ -17,8 +17,8 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     try:
         payload = jwt.decode(
             token,
-            str(os.getenv("SECRET_KEY")),
-            algorithms=[str(os.getenv("ALGORITHM"))]
+            str(os.getenv("SECRET_KEY", "samirbuilds-secret-key-local")),
+            algorithms=[str(os.getenv("ALGORITHM", "HS256"))]
         )
         user_id = payload.get("sub")
 
@@ -34,7 +34,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
             detail="Token Expired",
         )
     
-    except InvalidTokenError:
+    except JWTError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid Token",
@@ -47,13 +47,19 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
                 "_id": ObjectId(user_id)
             },
             {
-                "_id": 1, "username": 1, "email": 1, "phone": 1
+                "password": 0
             }
         )
     except InvalidId:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
+        )
+    
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found"
         )
     
     return user

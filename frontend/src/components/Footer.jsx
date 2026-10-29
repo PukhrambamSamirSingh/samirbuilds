@@ -1,9 +1,13 @@
 import React from 'react'
 import { FaGithub, FaLinkedin } from 'react-icons/fa'
+import { useTheme } from '../context/ThemeContext'
 
 const Footer = () => {
+    const { theme } = useTheme()
+    const dark = theme === 'dark'
+
     return (
-        <footer className='bg-gray-950 border-t border-gray-800 px-4 sm:px-8 md:px-16 lg:px-20 py-8 md:py-12 text-gray-400 text-sm'>
+        <footer className={`${dark ? 'bg-black border-zinc-900 text-gray-400' : 'bg-slate-100 border-gray-200 text-gray-600'} border-t px-4 sm:px-8 md:px-16 lg:px-20 py-8 md:py-12 text-sm transition-colors duration-300`}>
             <div className='max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left'>
                 <div>
                     <p className='font-semibold text-gray-200 text-base'>Samir Builds</p>

@@ -1,11 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { MdClose } from "react-icons/md";
 
 const AddBlog = ({openAdd, setOpenAdd}) => {
+    const navigate = useNavigate()
     const modalRef = useRef(null)
 
     useEffect(()=>{
         if (openAdd) {
+            const token = localStorage.getItem('token')
+            if (!token) {
+                setOpenAdd(false)
+                navigate('/signup')
+                return
+            }
             document.body.style.overflow = "hidden";
             setTimeout(() => {
                 modalRef.current?.querySelector("input")?.focus()
@@ -17,7 +25,7 @@ const AddBlog = ({openAdd, setOpenAdd}) => {
         return () => {
             document.body.style.overflow = "auto"
         }
-    }, [openAdd])
+    }, [openAdd, navigate, setOpenAdd])
 
     useEffect(()=>{
         const handleTab = (e) => {
@@ -112,7 +120,7 @@ const AddBlog = ({openAdd, setOpenAdd}) => {
                                 />
                             </div>
                             <button 
-                                className='mt-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-sm sm:text-base transition-colors shadow-lg cursor-pointer' 
+                                className='mt-3 w-full bg-[#ededf1] hover:bg-white text-[#070708] font-bold py-3 px-6 rounded-full text-sm sm:text-base transition-all duration-200 active:scale-[0.98] shadow-sm cursor-pointer border-0 border-none' 
                                 type='button'
                             >
                                 Publish Blog

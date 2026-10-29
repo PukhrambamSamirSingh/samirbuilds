@@ -1,15 +1,25 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import AddBlog from './AddBlog'
 import { useTheme } from '../context/ThemeContext'
 
 const BlogSingle = ({blog}) => {
+    const navigate = useNavigate()
     const [openAdd, setOpenAdd] = useState(false)
     const { theme } = useTheme()
     
     const capitalizeFirstLetter = (text) => {
         if (!text) return "";
         return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    const handleAddBlogClick = () => {
+        const token = localStorage.getItem('token')
+        if (!token) {
+            navigate('/signup')
+            return
+        }
+        setOpenAdd(true)
     }
     
     if (!blog) return null;
@@ -47,8 +57,8 @@ const BlogSingle = ({blog}) => {
             </div>
             <button 
                 type='button'
-                className='px-5 py-2.5 border border-blue-500 text-blue-500 hover:bg-blue-600 hover:text-white font-semibold rounded-xl text-xs sm:text-sm text-center cursor-pointer transition-all w-full sm:w-auto self-start shadow-md' 
-                onClick={()=>{setOpenAdd(true)}}
+                className='inline-flex items-center gap-2 bg-[#ededf1] hover:bg-white text-[#070708] font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-full transition-all duration-200 active:scale-[0.98] shadow-sm cursor-pointer w-full sm:w-auto self-start border-0 border-none' 
+                onClick={handleAddBlogClick}
             >
                 + Add New Blog
             </button>

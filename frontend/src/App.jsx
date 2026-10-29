@@ -11,12 +11,13 @@ import Blog from './pages/Blog'
 import SignUp from './pages/SignUp'
 import SignIn from './pages/SignIn'
 import Notes from './pages/Notes'
+import NoteSingle from './pages/NoteSingle'
 import Projects from './pages/Projects'
 
 const App = () => {
     return (
         <ThemeProvider>
-            <div className='min-h-screen flex flex-col justify-between font-sans antialiased'>
+            <div className='min-h-screen flex flex-col justify-between font-sans antialiased bg-slate-50 dark:bg-black text-gray-900 dark:text-white transition-colors duration-300'>
                 <div className='flex-1 flex flex-col'>
                     <Routes>
                         <Route path='/' element={<Home />} />
@@ -24,6 +25,7 @@ const App = () => {
                         <Route path='/blogs' element={<Blogs />} />
                         <Route path='/blogs/:slug' element={<Blog/>}/>
                         <Route path='/notes' element={<Notes/>}/>
+                        <Route path='/notes/:slug' element={<NoteSingle/>}/>
                         <Route path="/signup" element={<SignUp/>}/>
                         <Route path='/signin' element={<SignIn/>}/>
                         <Route path='/projects' element={<Projects/>}/>

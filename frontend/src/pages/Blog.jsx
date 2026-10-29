@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { useLocation, Link } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
+import LoadingSpinner from '../components/LoadingSpinner'
 
 const Blog = () => {
   const { pathname } = useLocation()
@@ -37,7 +38,7 @@ const Blog = () => {
   }, [pathname])
   
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-slate-100 text-gray-900'} pb-16 flex flex-col justify-between transition-colors duration-300`}>
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-black text-white' : 'bg-slate-50 text-gray-900'} pb-16 flex flex-col justify-between transition-colors duration-300 font-sans`}>
       <div>
         <Navbar/>
         <main className='max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-12'>
@@ -46,7 +47,7 @@ const Blog = () => {
           </Link>
           
           {loading ? (
-            <div className={`text-center py-20 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Loading article...</div>
+            <LoadingSpinner />
           ) : !blog ? (
             <div className={`text-center py-20 ${theme === 'dark' ? 'text-gray-400 bg-gray-900/50 border-gray-700' : 'text-gray-600 bg-white border-gray-200'} rounded-2xl border`}>
               Blog post not found.

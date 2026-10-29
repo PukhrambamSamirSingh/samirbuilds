@@ -18,47 +18,77 @@ async def create_note(note: CreateNote, current_user: Annotated[dict, Depends(ge
         "tag": note_dict["tag"],
         "author": str(current_user["_id"]),
         "published_at": note_dict["published_at"],
-        "slug": slugify(note_dict["title"]),
+        "slug": (note_dict.get("slug") or slugify(note_dict["title"])).lower(),
     }
 
-    result = await db.notes.insert_one(new_note)
+    try:
+        result = await db.notes.insert_one(new_note)
 
-    if not result.inserted_id:
+        if not result.inserted_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to create the Note",
+            )
+
+        return {
+            "message": "Note Created Successfully",
+            "_id": str(result.inserted_id),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("Database error in create_note:", e)
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to create the Note",
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Database connection error: {str(e)}. Please verify MongoDB Atlas IP whitelist."
         )
-
-    return {
-        "message": "Note Created Successfully",
-        "_id": str(result.inserted_id),
-    }
 
 
 # Get all notes ---------------------------------------------------------------
 
 async def get_notes():
-    notes = await db.notes.find({}).sort("published_at", -1).to_list(length=None)
+    try:
+        notes = await db.notes.find({}).sort("published_at", -1).to_list(length=100)
 
-    for note in notes:
-        note["_id"] = str(note["_id"])
+        for note in notes:
+            note["_id"] = str(note["_id"])
+            if "author" in note and note["author"] is not None:
+                note["author"] = str(note["author"])
 
-    return notes
+        return notes
+    except Exception as e:
+        print("Error fetching notes from MongoDB Atlas:", e)
+        return []
 
 
 # Get a single note -----------------------------------------------------------
 
 async def get_note(slug: str):
-    note = await db.notes.find_one({"slug": slug})
+    try:
+        slug_clean = slug.strip().lower()
+        note = await db.notes.find_one({"$or": [{"slug": slug_clean}, {"slug": slug}]})
 
-    if not note:
+        if not note and ObjectId.is_valid(slug):
+            note = await db.notes.find_one({"_id": ObjectId(slug)})
+
+        if not note:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Note Not Found",
+            )
+
+        note["_id"] = str(note["_id"])
+        if "author" in note and note["author"] is not None:
+            note["author"] = str(note["author"])
+        return note
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("Error fetching note:", e)
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Note Not Found",
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Database connection error: {str(e)}"
         )
-
-    note["_id"] = str(note["_id"])
-    return note
 
 
 # Update a note ---------------------------------------------------------------
@@ -68,20 +98,32 @@ async def update_note(
     note: UpdateNote,
     current_user: Annotated[dict, Depends(get_current_user)],
 ):
-    existing = await db.notes.find_one({"_id": ObjectId(id)})
+    try:
+        clean_id = id.strip()
+        query = {}
+        if ObjectId.is_valid(clean_id):
+            query = {"$or": [{"_id": ObjectId(clean_id)}, {"slug": clean_id.lower()}, {"slug": clean_id}]}
+        else:
+            query = {"$or": [{"slug": clean_id.lower()}, {"slug": clean_id}]}
 
-    if not existing:
-        raise HTTPException(status_code=404, detail="Note Not Found")
+        existing = await db.notes.find_one(query)
 
-    if existing["author"] != str(current_user["_id"]):
-        raise HTTPException(status_code=401, detail="Not allowed to update this note")
+        if not existing:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note Not Found")
 
-    update_data = note.model_dump(exclude_unset=True)
-    if "title" in update_data:
-        update_data["slug"] = slugify(update_data["title"])
+        if str(existing.get("author", "")) != str(current_user["_id"]):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed to update this note")
 
-    await db.notes.update_one({"_id": ObjectId(id)}, {"$set": update_data})
-    return {"message": "Note updated successfully"}
+        update_data = note.model_dump(exclude_unset=True)
+        if "title" in update_data:
+            update_data["slug"] = slugify(update_data["title"])
+
+        await db.notes.update_one({"_id": existing["_id"]}, {"$set": update_data})
+        return {"message": "Note updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=str(e))
 
 
 # Delete a note ---------------------------------------------------------------
@@ -90,13 +132,35 @@ async def delete_note(
     id: str,
     current_user: Annotated[dict, Depends(get_current_user)],
 ):
-    existing = await db.notes.find_one({"_id": ObjectId(id)})
+    try:
+        clean_id = id.strip()
+        query = {}
+        if ObjectId.is_valid(clean_id):
+            query = {"$or": [{"_id": ObjectId(clean_id)}, {"slug": clean_id.lower()}, {"slug": clean_id}]}
+        else:
+            query = {"$or": [{"slug": clean_id.lower()}, {"slug": clean_id}]}
 
-    if not existing:
-        raise HTTPException(status_code=404, detail="Note Not Found")
+        existing = await db.notes.find_one(query)
 
-    if existing["author"] != str(current_user["_id"]):
-        raise HTTPException(status_code=401, detail="Not allowed to delete this note")
+        if not existing:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note Not Found")
 
-    await db.notes.delete_one({"_id": ObjectId(id)})
-    return {"message": "Note deleted successfully"}
+        user_id_str = str(current_user["_id"])
+        note_author_str = str(existing.get("author", ""))
+
+        if note_author_str != user_id_str:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not allowed to delete this note: only the author who uploaded it can delete."
+            )
+
+        await db.notes.delete_one({"_id": existing["_id"]})
+        return {
+            "message": "Note deleted successfully",
+            "_id": str(existing["_id"])
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("Database error in delete_note:", e)
+        raise HTTPException(status_code=503, detail=str(e))

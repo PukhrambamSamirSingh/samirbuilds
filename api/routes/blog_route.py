@@ -2,7 +2,6 @@ from models.blog_model import (
     CreateBlog, UpdateBlog
 )
 from dependencies.auth import get_current_user
-from jwt.exceptions import ExpiredSignatureError
 from db import db
 from fastapi import HTTPException, status
 from fastapi import Depends
@@ -79,13 +78,14 @@ async def update_blog(id: str, blog: UpdateBlog, current_user: Annotated[dict, D
     
     update_data = blog.model_dump(exclude_unset=True)
 
-    update_data["slug"] = slugify(update_data["title"])
-
     if not update_data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No fields were updated"
         )
+
+    if "title" in update_data and update_data["title"]:
+        update_data["slug"] = slugify(update_data["title"])
     
     await db.blogs.update_one(
         {
@@ -104,12 +104,6 @@ async def update_blog(id: str, blog: UpdateBlog, current_user: Annotated[dict, D
 async def get_blogs():
     blogs = await db.blogs.find({}).sort("published_at", -1).to_list(length=None)
 
-    if not blogs:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Blogs Not Found"
-        )
-    
     for blog in blogs:
         blog["_id"] = str(blog["_id"])
     

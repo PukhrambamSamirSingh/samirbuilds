@@ -6,7 +6,7 @@ const Projects = () => {
   const { theme } = useTheme()
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-slate-100 text-gray-900'} flex flex-col justify-between transition-colors duration-300`}>
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-black text-white' : 'bg-slate-50 text-gray-900'} flex flex-col justify-between transition-colors duration-300 font-sans`}>
         <div>
             <Navbar />
             <main className='max-w-6xl mx-auto px-4 sm:px-8 md:px-12 py-12'>

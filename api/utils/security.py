@@ -38,8 +38,8 @@ def create_access_token(
 
     encoded_jwt = jwt.encode(
         to_encode,
-        os.getenv("SECRET_KEY"),
-        algorithm=os.getenv("ALGORITHM")
+        os.getenv("SECRET_KEY", "samirbuilds-secret-key-local"),
+        algorithm=os.getenv("ALGORITHM", "HS256")
     )
 
     return encoded_jwt

@@ -3,6 +3,7 @@ import BlogSingle from '../components/BlogSingle'
 import BlogChain from '../components/BlogChain'
 import Navbar from '../components/Navbar'
 import { useTheme } from '../context/ThemeContext'
+import LoadingSpinner from '../components/LoadingSpinner'
 
 const Blogs = () => {
     const [blogs, setBlogs] = useState([])
@@ -33,7 +34,7 @@ const Blogs = () => {
     const old_blogs = blogs.slice(1)
     
     return (
-        <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-slate-100 text-gray-900'} pb-12 flex flex-col justify-between transition-colors duration-300`}>
+        <div className={`min-h-screen ${theme === 'dark' ? 'bg-black text-white' : 'bg-slate-50 text-gray-900'} pb-12 flex flex-col justify-between transition-colors duration-300 font-sans`}>
             <div>
                 <Navbar />
                 <main className='max-w-7xl mx-auto px-4 sm:px-8 md:px-12 lg:px-20 py-6'>
@@ -41,9 +42,7 @@ const Blogs = () => {
                         Articles & Insights
                     </h1>
                     {loading ? (
-                        <div className={`flex justify-center items-center py-20 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                            Loading articles...
-                        </div>
+                        <LoadingSpinner />
                     ) : blogs.length === 0 ? (
                         <div className={`text-center py-20 ${theme === 'dark' ? 'text-gray-400 bg-gray-900/40 border-gray-700' : 'text-gray-600 bg-white border-gray-200'} rounded-2xl border`}>
                             No blogs found yet. Be the first to create one!

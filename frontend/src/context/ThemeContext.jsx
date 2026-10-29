@@ -9,6 +9,19 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('theme', theme)
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark')
+      document.documentElement.classList.remove('light')
+      document.documentElement.setAttribute('data-theme', 'dark')
+      document.documentElement.style.backgroundColor = '#000000'
+      document.body.style.backgroundColor = '#000000'
+    } else {
+      document.documentElement.classList.remove('dark')
+      document.documentElement.classList.add('light')
+      document.documentElement.setAttribute('data-theme', 'light')
+      document.documentElement.style.backgroundColor = '#f8fafc'
+      document.body.style.backgroundColor = '#f8fafc'
+    }
   }, [theme])
 
   const toggleTheme = () => {

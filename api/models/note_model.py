@@ -9,8 +9,10 @@ class CreateNote(BaseModel):
     published_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC)
     )
+    slug: Optional[str] = None
 
 class UpdateNote(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
     tag: Optional[str] = None
+    slug: Optional[str] = None
