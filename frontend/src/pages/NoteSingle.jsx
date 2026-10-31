@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import { NoteFeatured, NoteGridCard } from '../components/NoteCard'
+import { NoteFeatured, NoteGridCard, getTag } from '../components/NoteCard'
 import { useTheme } from '../context/ThemeContext'
 
-import { titleToSlug } from '../utils/markdownUtils'
+import { titleToSlug, calculateReadingStats } from '../utils/markdownUtils'
 import { isNoteAuthor, deleteNoteApi } from '../utils/authUtils'
 import { calculateRelatedNotes } from '../utils/relatedNotes'
 import Pagination from '../components/Pagination'
@@ -32,6 +32,9 @@ const NoteSingle = () => {
     const [deleteError, setDeleteError] = useState(null)
 
     const canDelete = isNoteAuthor(note)
+    const tag = getTag(note?.tag, dark)
+    const tagClass = dark ? tag.dark : tag.light
+    const { readingTime } = calculateReadingStats(note?.content || '')
 
     const handleConfirmDelete = async () => {
         if (!note) return
@@ -186,11 +189,18 @@ const NoteSingle = () => {
                         </Link>
 
                         {note && (
-                            <div className='flex items-center gap-3 text-xs'>
-                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full uppercase tracking-wider font-bold text-[10px] border-0 border-none shadow-none ${
-                                    dark ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-700'
-                                }`}>
-                                    <FiTag /> {note.tag || 'AI/ML'}
+                            <div className='flex items-center gap-2.5 sm:gap-3 flex-wrap text-xs'>
+                                <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border-0 border-none ${tagClass}`}>
+                                    <span className='w-1.5 h-1.5 rounded-full' style={{ background: tag.bar }} />
+                                    {note.tag || 'general'}
+                                </span>
+                                {note.published_at && (
+                                    <span className={`text-xs font-medium ${dark ? 'text-zinc-400' : 'text-gray-500'}`}>
+                                        {new Date(note.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                    </span>
+                                )}
+                                <span className={`text-xs font-medium italic ${dark ? 'text-zinc-400' : 'text-gray-500'}`}>
+                                    · {readingTime}
                                 </span>
                             </div>
                         )}

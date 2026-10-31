@@ -33,12 +33,12 @@ const timeline = [
         step: '02',
         company: 'XDBS',
         role: 'Research Analyst (CDQA)',
-        period: 'Professional Experience',
+        period: 'Jun 2025 - Mar 2026',
         type: 'Data & Prospect Research',
         description:
             'Research online and capture accurate contact information according to business requirements and Maintaining and updating list/database on Excel also Make outbound calls to verify the contact information.',
         keyTakeaway:
-            'Honed analytical rigor, database validation habits, methodical investigation, and transforming raw information into structured, actionable reports.',
+            'Improved my research skills, checked contact details, and organized information into clear reports.',
         skills: ['Prospect Research', 'Data Analysis', 'Excel Reporting', 'Data Validation', 'Attention to Detail']
     },
     {
@@ -166,10 +166,10 @@ const Experience = () => {
                         <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-4 border-gray-200 dark:border-gray-800'>
                             <div>
                                 <h2 className={`text-2xl sm:text-3xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                    Career Timeline
+                                    My Journey So Far
                                 </h2>
                                 <p className={`text-xs sm:text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                    Professional milestones and hands-on experience
+                                    A look at the experiences, roles, and lessons that have shaped my professional journey.
                                 </p>
                             </div>
                             <span

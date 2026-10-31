@@ -7,7 +7,7 @@ import { isNoteAuthor } from '../utils/authUtils'
 import { FiCopy, FiCheck, FiBookOpen, FiMaximize2, FiMinimize2, FiArrowRight, FiTrash2, FiEdit2 } from 'react-icons/fi'
 
 /* ── Tag config ─────────────────────────────────────────────────── */
-const TAG_META = {
+export const TAG_META = {
     'ai/ml':   { dark: 'bg-purple-950/60 text-purple-300', light: 'bg-purple-100 text-purple-700', bar: '#a855f7' },
     'web':     { dark: 'bg-blue-950/60 text-blue-300',       light: 'bg-blue-100 text-blue-700',       bar: '#3b82f6' },
     'python':  { dark: 'bg-yellow-950/60 text-yellow-300', light: 'bg-yellow-100 text-yellow-700', bar: '#eab308' },
@@ -16,7 +16,7 @@ const TAG_META = {
     'other':   { dark: 'bg-pink-950/60 text-pink-300',       light: 'bg-pink-100 text-pink-700',       bar: '#ec4899' },
 }
 
-const getTag = (tag, dark) => {
+export const getTag = (tag, dark) => {
     const key = tag?.toLowerCase() || 'general'
     return TAG_META[key] || TAG_META['general']
 }
@@ -27,25 +27,12 @@ const getTag = (tag, dark) => {
 export function NoteFeatured({ note, isLatest = true, onDelete, onEdit }) {
     const { theme } = useTheme()
     const dark = theme === 'dark'
-    const [copied, setCopied] = useState(false)
     const [expanded, setExpanded] = useState(false)
 
     if (!note) return null
 
     const canDelete = isNoteAuthor(note)
-    const tag = getTag(note?.tag, dark)
-    const tagClass = dark ? tag.dark : tag.light
     const { wordCount, readingTime } = calculateReadingStats(note.content || '')
-
-    const handleCopy = async () => {
-        try {
-            await navigator.clipboard.writeText(note.content || '')
-            setCopied(true)
-            setTimeout(() => setCopied(false), 2000)
-        } catch (err) {
-            console.error('Failed to copy note content: ', err)
-        }
-    }
 
     const isLongNote = (note.content?.length || 0) > 2200
 
@@ -75,86 +62,38 @@ export function NoteFeatured({ note, isLatest = true, onDelete, onEdit }) {
             dark ? 'text-zinc-100' : 'text-gray-900'
         }`}>
             <div className='flex flex-col gap-6 px-0 py-2'>
-                {/* Meta header bar */}
-                <div className='flex items-center justify-between flex-wrap gap-4 pb-4 border-0 border-none'>
-                    <div className='flex items-center gap-3 flex-wrap'>
-                        <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border-0 border-none ${tagClass}`}>
-                            <span className='w-1.5 h-1.5 rounded-full' style={{ background: tag.bar }} />
-                            {note.tag || 'general'}
-                        </span>
-                        {note.published_at && (
-                            <span className={`text-xs font-medium ${dark ? 'text-zinc-400' : 'text-gray-500'}`}>
-                                {new Date(note.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                            </span>
-                        )}
-                        <span className={`text-xs font-medium italic ${dark ? 'text-zinc-400' : 'text-gray-500'}`}>
-                            · {readingTime}
-                        </span>
-                        {isLatest && (
-                            <span className='text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border-0 border-none'>
-                                Featured
-                            </span>
-                        )}
-                    </div>
-
-                    {/* Actions: Copy & Delete */}
-                    <div className='flex items-center gap-2'>
+                {/* Actions: Edit & Delete if author */}
+                {canDelete && (
+                    <div className='flex items-center justify-end gap-2 pb-2 border-0 border-none'>
                         <button
                             type='button'
-                            onClick={handleCopy}
+                            onClick={() => onEdit && onEdit(note)}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border-0 border-none shadow-none transition cursor-pointer ${
                                 dark 
-                                    ? 'bg-gray-900 text-zinc-300 hover:text-white hover:bg-gray-800' 
-                                    : 'bg-slate-200/80 text-gray-700 hover:text-gray-900 hover:bg-slate-300'
+                                    ? 'bg-blue-500/15 text-blue-400 hover:text-blue-300 hover:bg-blue-500/25' 
+                                    : 'bg-blue-50 text-blue-600 hover:text-blue-700 hover:bg-blue-100'
                             }`}
-                            title='Copy raw note content'
+                            title='Update this note'
                         >
-                            {copied ? (
-                                <>
-                                    <FiCheck className='text-emerald-400' />
-                                    <span className='text-emerald-400 font-medium'>Copied</span>
-                                </>
-                            ) : (
-                                <>
-                                    <FiCopy />
-                                    <span>Copy Note</span>
-                                </>
-                            )}
+                            <FiEdit2 className='text-xs' />
+                            <span>Update Note</span>
                         </button>
 
-                        {canDelete && (
-                            <>
-                                <button
-                                    type='button'
-                                    onClick={() => onEdit && onEdit(note)}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border-0 border-none shadow-none transition cursor-pointer ${
-                                        dark 
-                                            ? 'bg-blue-500/15 text-blue-400 hover:text-blue-300 hover:bg-blue-500/25' 
-                                            : 'bg-blue-50 text-blue-600 hover:text-blue-700 hover:bg-blue-100'
-                                    }`}
-                                    title='Update this note'
-                                >
-                                    <FiEdit2 className='text-xs' />
-                                    <span>Update Note</span>
-                                </button>
-
-                                <button
-                                    type='button'
-                                    onClick={() => onDelete && onDelete(note)}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border-0 border-none shadow-none transition cursor-pointer ${
-                                        dark 
-                                            ? 'bg-red-500/15 text-red-400 hover:text-red-300 hover:bg-red-500/25' 
-                                            : 'bg-red-50 text-red-600 hover:text-red-700 hover:bg-red-100'
-                                    }`}
-                                    title='Delete note'
-                                >
-                                    <FiTrash2 className='text-xs' />
-                                    <span>Delete Note</span>
-                                </button>
-                            </>
-                        )}
+                        <button
+                            type='button'
+                            onClick={() => onDelete && onDelete(note)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border-0 border-none shadow-none transition cursor-pointer ${
+                                dark 
+                                    ? 'bg-red-500/15 text-red-400 hover:text-red-300 hover:bg-red-500/25' 
+                                    : 'bg-red-50 text-red-600 hover:text-red-700 hover:bg-red-100'
+                            }`}
+                            title='Delete note'
+                        >
+                            <FiTrash2 className='text-xs' />
+                            <span>Delete Note</span>
+                        </button>
                     </div>
-                </div>
+                )}
 
                 {/* Full Rich Markdown & LaTeX Math Content */}
                 <div className={`relative transition-all ${

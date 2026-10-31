@@ -369,15 +369,26 @@ export const getAdminHeaders = (extraHeaders = {}) => {
 }
 
 export const adminLoginApi = async ({ email, password, secret_key }) => {
+    const payload = {}
+    if (email) payload.email = email
+    if (password) payload.password = password
+    if (secret_key) payload.secret_key = secret_key
+
     const res = await fetch('http://127.0.0.1:8000/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, secret_key })
+        body: JSON.stringify(payload)
     })
 
     const data = await res.json()
     if (!res.ok) {
-        throw new Error(data.detail || 'Admin login failed.')
+        let msg = 'Admin login failed.'
+        if (typeof data.detail === 'string') {
+            msg = data.detail
+        } else if (Array.isArray(data.detail)) {
+            msg = data.detail.map(d => `${d.loc ? d.loc.slice(-1) + ': ' : ''}${d.msg || d.message}`).join(', ')
+        }
+        throw new Error(msg)
     }
 
     if (data.access_token) {
@@ -406,6 +417,13 @@ export const verifyAdminSecretApi = async (secret_key) => {
     }
     setAdminSecret(secret_key)
     return data
+}
+
+export const maskSecretKey = (key) => {
+    if (!key) return ''
+    const cleanKey = String(key).trim()
+    if (cleanKey.length < 8) return '********'
+    return `${cleanKey.slice(0, 4)}***${cleanKey.slice(-4)}`
 }
 
 export const getAdminSettingsApi = async () => {

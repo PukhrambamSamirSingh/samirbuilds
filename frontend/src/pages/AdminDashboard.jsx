@@ -17,7 +17,8 @@ import {
     updateAdminSecretKeyApi,
     getAdminStatsApi,
     deleteBlogApi,
-    deleteNoteApi
+    deleteNoteApi,
+    maskSecretKey
 } from '../utils/authUtils'
 import {
     FiShield,
@@ -84,13 +85,23 @@ const AdminDashboard = () => {
     const [deleteNoteError, setDeleteNoteError] = useState(null)
 
     // Security Settings Form State
-    const [keySettings, setKeySettings] = useState({ secret_key_preview: 'samirbuilds-admin-***' })
+    const [keySettings, setKeySettings] = useState(null)
     const [currentKeyInput, setCurrentKeyInput] = useState('')
     const [newKeyInput, setNewKeyInput] = useState('')
     const [confirmKeyInput, setConfirmKeyInput] = useState('')
     const [keyUpdating, setKeyUpdating] = useState(false)
     const [keySuccess, setKeySuccess] = useState('')
     const [keyError, setKeyError] = useState('')
+
+    // Dynamic masked preview of active secret key
+    const displaySecretKey = (() => {
+        const preview = keySettings?.secret_key_preview || keySettings?.secret_key_hint
+        if (preview) return preview
+        const localSecret = getAdminSecret()
+        if (localSecret) return maskSecretKey(localSecret)
+        if (loadingData) return 'Fetching key...'
+        return 'Active & Secured'
+    })()
 
     // Check authentication on load
     useEffect(() => {
@@ -271,11 +282,18 @@ const AdminDashboard = () => {
 
         setKeyUpdating(true)
         try {
-            await updateAdminSecretKeyApi(currentKeyInput.trim(), newKeyInput.trim())
+            const res = await updateAdminSecretKeyApi(currentKeyInput.trim(), newKeyInput.trim())
             setKeySuccess('Master Secret Key updated successfully. Runtime environment reconfigured.')
             setCurrentKeyInput('')
             setNewKeyInput('')
             setConfirmKeyInput('')
+            if (res?.secret_key_preview || res?.secret_key_hint) {
+                setKeySettings(prev => ({
+                    ...(prev || {}),
+                    secret_key_preview: res.secret_key_preview || res.secret_key_hint,
+                    secret_key_hint: res.secret_key_hint || res.secret_key_preview
+                }))
+            }
             const updated = await getAdminSettingsApi()
             setKeySettings(updated)
         } catch (err) {
@@ -621,7 +639,7 @@ const AdminDashboard = () => {
                                         </div>
                                     </div>
                                     <div className='text-sm font-bold text-emerald-400 mt-2 truncate font-mono'>
-                                        {keySettings.secret_key_preview || 'samirbuilds-admin-***'}
+                                        {displaySecretKey}
                                     </div>
                                     <p className={`text-[11px] mt-1 ${dark ? 'text-zinc-500' : 'text-slate-400'}`}>
                                         Public create buttons secured
@@ -953,7 +971,7 @@ const AdminDashboard = () => {
                                         <div className={`p-3.5 rounded-xl text-xs mb-5 border font-mono ${
                                             dark ? 'bg-black/50 border-white/10 text-zinc-300' : 'bg-slate-50 border-slate-200 text-slate-700'
                                         }`}>
-                                            Active Master Key: <span className='text-blue-400 font-bold'>{keySettings.secret_key_preview}</span>
+                                            Active Master Key: <span className='text-blue-400 font-bold'>{displaySecretKey}</span>
                                         </div>
 
                                         {keySuccess && (

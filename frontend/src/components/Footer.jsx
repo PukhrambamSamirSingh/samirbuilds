@@ -56,14 +56,9 @@ const Footer = () => {
                 </div>
                 <div className={`text-xs ${dark ? 'text-zinc-500' : 'text-gray-500'}`}>
                     © {new Date().getFullYear()}{' '}
-                    <Link
-                        to="/"
-                        className={`font-medium transition-colors ${
-                            dark ? 'text-zinc-400 hover:text-white' : 'text-gray-700 hover:text-gray-950'
-                        }`}
-                    >
+                    <span className={`font-medium ${dark ? 'text-zinc-400' : 'text-gray-700'}`}>
                         Samir Builds
-                    </Link>
+                    </span>
                     . All rights reserved.
                 </div>
             </div>

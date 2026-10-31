@@ -208,6 +208,16 @@ const Blogs = () => {
 
                             {/* Sidebar / Older Blogs (40% width) */}
                             <div className='w-full lg:col-span-2 flex flex-col gap-6 sm:gap-7 lg:sticky lg:top-8 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto pr-1 scrollbar-none'>
+                                {old_blogs.length > 0 && (
+                                    <div className='flex items-center justify-between pb-1 border-b border-zinc-200 dark:border-zinc-800/80'>
+                                        <h3 className={`text-base sm:text-lg font-bold tracking-tight ${dark ? 'text-white' : 'text-gray-900'}`}>
+                                            More Blogs
+                                        </h3>
+                                        <span className={`text-xs ${dark ? 'text-zinc-500' : 'text-gray-400'} font-medium`}>
+                                            {old_blogs.length} {old_blogs.length === 1 ? 'article' : 'articles'}
+                                        </span>
+                                    </div>
+                                )}
                                 {old_blogs.map(blog => (
                                     <BlogChain 
                                         key={blog._id || blog.slug || blog.title} 
