@@ -84,9 +84,8 @@ const SignUp = () => {
     return await resendVerificationOtp(formData.email, 'signup')
   }
 
-  const inputStyle = `w-full rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500 transition-colors border ${
-    dark ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'
-  }`
+  const inputStyle = `w-full rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500 transition-colors border ${dark ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'
+    }`
 
   const labelStyle = `text-xs sm:text-sm font-semibold ${dark ? 'text-gray-300' : 'text-gray-700'}`
 
@@ -94,14 +93,14 @@ const SignUp = () => {
     <div className={`min-h-screen ${dark ? 'bg-black text-white' : 'bg-slate-50 text-gray-900'} flex flex-col justify-between transition-colors duration-300 font-sans`}>
       <div>
         <Navbar />
-        <main className='max-w-6xl mx-auto px-4 sm:px-8 py-8 sm:py-16 flex flex-col md:flex-row items-center justify-center gap-8 lg:gap-16'>
+        <main className='max-w-[1320px] mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-8 pt-6 md:pt-10 pb-8 md:pb-14 flex flex-col md:flex-row items-center justify-center gap-8 lg:gap-16'>
           {/* Left Info Banner */}
           <div className='w-full md:w-1/2 text-center md:text-left flex flex-col gap-4'>
             <span className='inline-block self-center md:self-start text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20'>
               Join Samir Builds
             </span>
             <h1 className={`text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight ${dark ? 'text-white' : 'text-gray-900'}`}>
-              Start Exploring & Researching
+              Start Exploring & Building
             </h1>
             <p className={`${dark ? 'text-gray-400' : 'text-gray-600'} text-sm sm:text-base leading-relaxed`}>
               Create an account with email verification to write deep-dive mathematical notes, share ML experiments, and publish articles.
@@ -211,9 +210,8 @@ const SignUp = () => {
                       <button
                         type='button'
                         onClick={() => setShowPassword(!showPassword)}
-                        className={`absolute right-3 p-1 rounded-md transition-colors cursor-pointer ${
-                          dark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'
-                        }`}
+                        className={`absolute right-3 p-1 rounded-md transition-colors cursor-pointer ${dark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'
+                          }`}
                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
                         {showPassword ? <FaEyeSlash className='text-base' /> : <FaEye className='text-base' />}

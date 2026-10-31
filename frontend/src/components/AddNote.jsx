@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import MarkdownRenderer from './MarkdownRenderer'
-import { formatMathAndMarkdown, titleToSlug } from '../utils/markdownUtils'
-import { getCurrentUserId } from '../utils/authUtils'
+import { formatMathAndMarkdown, titleToSlug, extractAutoTitle } from '../utils/markdownUtils'
+import { getCurrentUserId, getAuthToken, getAdminHeaders, getAdminToken, getAdminSecret } from '../utils/authUtils'
 import { FiEye, FiEdit3, FiColumns, FiCheck, FiX, FiCode, FiGrid, FiImage, FiVideo, FiUploadCloud, FiLink } from 'react-icons/fi'
 import { HiSparkles } from 'react-icons/hi2'
 import { uploadMediaFile } from '../services/mediaService'
@@ -41,6 +41,7 @@ const AddNote = ({ setOpenAdd, onNoteAdded, noteToEdit = null, onNoteUpdated = n
         }
     }, [])
 
+
     const handleChange = (e) => {
         const { name, value } = e.target
         setForm(prev => ({ ...prev, [name]: value }))
@@ -56,11 +57,7 @@ const AddNote = ({ setOpenAdd, onNoteAdded, noteToEdit = null, onNoteUpdated = n
         const formatted = formatMathAndMarkdown(textToFormat)
         
         // Auto-extract title if title is empty
-        let detectedTitle = form.title
-        if (!detectedTitle.trim()) {
-            const firstLine = formatted.split('\n').find(l => l.trim().length > 0) || ''
-            detectedTitle = firstLine.replace(/^#+\s*/, '').slice(0, 90).trim()
-        }
+        let detectedTitle = form.title.trim() ? form.title : extractAutoTitle(formatted)
 
         // Auto-detect tag if general
         let detectedTag = form.tag
@@ -219,10 +216,10 @@ const AddNote = ({ setOpenAdd, onNoteAdded, noteToEdit = null, onNoteUpdated = n
         if (!pasted) return
 
         // Check if the pasted text has LaTeX math delimiters, tab tables, ChatGPT signatures, or flow diagrams
-        const hasMath = pasted.includes('\\(') || pasted.includes('\\[') || pasted.includes('\\begin{bmatrix') || pasted.includes('\\mathbf') || pasted.includes('$$')
+        const hasMath = pasted.includes('\\(') || pasted.includes('\\[') || pasted.includes('\\begin{') || pasted.includes('\\mathbf') || pasted.includes('$$') || pasted.includes('\\frac')
         const hasTabs = pasted.includes('\t')
         const hasSections = /Part\s+\d+|Example\s+[A-Z]|Step\s+\d+/i.test(pasted)
-        const hasDiagram = /Where FFN fits|Token representations|The entire idea in one picture|Explore the logits|Final next-token probabilities|One vector per position|:::|Self-attention.*FFN/i.test(pasted)
+        const hasDiagram = /Where FFN fits|Token representations|The entire idea in one picture|Explore the logits|Final next-token probabilities|One vector per position|:::|```mermaid|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|Self-attention.*FFN/i.test(pasted)
 
         if (hasMath || hasTabs || hasSections || hasDiagram) {
             // Apply formatting immediately on paste
@@ -230,11 +227,7 @@ const AddNote = ({ setOpenAdd, onNoteAdded, noteToEdit = null, onNoteUpdated = n
             const formatted = formatMathAndMarkdown(pasted)
 
             // Auto-detect title if empty
-            let detectedTitle = form.title
-            if (!detectedTitle.trim()) {
-                const firstLine = pasted.split('\n').find(l => l.trim().length > 0) || ''
-                detectedTitle = firstLine.replace(/^#+\s*/, '').slice(0, 90).trim()
-            }
+            let detectedTitle = form.title.trim() ? form.title : extractAutoTitle(pasted)
 
             // Auto-detect tag
             let detectedTag = form.tag
@@ -252,11 +245,20 @@ const AddNote = ({ setOpenAdd, onNoteAdded, noteToEdit = null, onNoteUpdated = n
             const currentContent = form.content
             const newContent = currentContent.slice(0, start) + formatted + currentContent.slice(end)
 
-            setForm({
-                title: detectedTitle || form.title,
+            setForm(prev => ({
+                ...prev,
+                title: detectedTitle || prev.title,
                 tag: detectedTag,
                 content: newContent
-            })
+            }))
+
+            setTimeout(() => {
+                if (textareaRef.current) {
+                    const nextPos = start + formatted.length
+                    textareaRef.current.focus()
+                    textareaRef.current.setSelectionRange(nextPos, nextPos)
+                }
+            }, 0)
 
             setNotice('✨ LaTeX math, equations, vectors & matrices auto-styled!')
             setTimeout(() => setNotice(''), 4500)
@@ -268,11 +270,11 @@ const AddNote = ({ setOpenAdd, onNoteAdded, noteToEdit = null, onNoteUpdated = n
         setError('')
         setLoading(true)
 
-        const token = localStorage.getItem('token')
+        const token = getAuthToken() || getAdminToken() || getAdminSecret()
         if (!token) {
             setLoading(false)
             setOpenAdd(false)
-            navigate('/signup')
+            navigate('/admin')
             return
         }
 

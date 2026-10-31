@@ -5,6 +5,7 @@ import {
 import { ThemeProvider } from './context/ThemeContext'
 import Home from './pages/Home'
 import About from './pages/About'
+import Experience from './pages/Experience'
 import Blogs from './pages/Blogs'
 import Footer from './components/Footer'
 import Blog from './pages/Blog'
@@ -13,6 +14,7 @@ import SignIn from './pages/SignIn'
 import Notes from './pages/Notes'
 import NoteSingle from './pages/NoteSingle'
 import Projects from './pages/Projects'
+import AdminDashboard from './pages/AdminDashboard'
 
 const App = () => {
     return (
@@ -22,13 +24,15 @@ const App = () => {
                     <Routes>
                         <Route path='/' element={<Home />} />
                         <Route path='/about' element={<About />} />
+                        <Route path='/experience' element={<Experience />} />
                         <Route path='/blogs' element={<Blogs />} />
-                        <Route path='/blogs/:slug' element={<Blog/>}/>
-                        <Route path='/notes' element={<Notes/>}/>
-                        <Route path='/notes/:slug' element={<NoteSingle/>}/>
-                        <Route path="/signup" element={<SignUp/>}/>
-                        <Route path='/signin' element={<SignIn/>}/>
-                        <Route path='/projects' element={<Projects/>}/>
+                        <Route path='/blogs/:slug' element={<Blog />} />
+                        <Route path='/notes' element={<Notes />} />
+                        <Route path='/notes/:slug' element={<NoteSingle />} />
+                        <Route path="/signup" element={<SignUp />} />
+                        <Route path='/signin' element={<SignIn />} />
+                        <Route path='/projects' element={<Projects />} />
+                        <Route path='/admin' element={<AdminDashboard />} />
                     </Routes>
                 </div>
                 <Footer />

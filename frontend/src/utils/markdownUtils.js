@@ -1,4 +1,24 @@
 /**
+ * Deduplicates repeated title at the beginning of a blog or note body
+ */
+export function cleanDuplicateTitle(title = '', content = '') {
+    if (!content || typeof content !== 'string') return ''
+    if (!title || typeof title !== 'string') return content.trim()
+
+    const cleanTitle = title.trim().toLowerCase().replace(/^[#\s\d\.\)\-]+/, '').trim()
+    if (!cleanTitle) return content.trim()
+
+    const lines = content.trim().split(/\r?\n/)
+    if (lines.length === 0) return ''
+
+    const firstLine = lines[0].trim().toLowerCase().replace(/^[#\s\d\.\)\-]+/, '').trim()
+    if (firstLine && (firstLine === cleanTitle || firstLine.startsWith(cleanTitle) || cleanTitle.startsWith(firstLine))) {
+        return lines.slice(1).join('\n').trim()
+    }
+    return content.trim()
+}
+
+/**
  * markdownUtils.js
  * Comprehensive utilities to process and enhance markdown, LaTeX math,
  * tables, code blocks, diagrams, and formatting.
@@ -69,6 +89,179 @@ function stripBoxed(str) {
     return res
 }
 
+/**
+ * Automatically extracts a clean, human-readable title from content
+ * (avoids raw code fences or diagram syntax as titles)
+ */
+export function extractAutoTitle(text = '') {
+    if (!text || typeof text !== 'string') return 'Learning Note'
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
+
+    // 1. Look for explicit markdown heading # Title
+    const headerLine = lines.find(l => /^#{1,4}\s+\S+/.test(l))
+    if (headerLine) {
+        return headerLine.replace(/^#{1,4}\s+/, '').slice(0, 90).trim()
+    }
+
+    // 2. Look for the first meaningful human-readable sentence/line
+    const textLine = lines.find(l => {
+        if (/^```/.test(l)) return false
+        if (/^(?:flowchart|graph|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|gitGraph|mindmap|timeline)\b/i.test(l)) return false
+        if (/^[a-zA-Z0-9_.-]+(\[|\(|\{|\(\(|\[\[|>)/.test(l)) return false
+        if (/(-->|---|-.->|==>)/.test(l)) return false
+        if (/^:::[a-zA-Z0-9_-]+:::/.test(l)) return false
+        if (/^(subgraph|end|style|classDef)\b/i.test(l)) return false
+        return l.length > 2
+    })
+    if (textLine) {
+        return textLine.replace(/^#+\s*/, '').slice(0, 90).trim()
+    }
+
+    return 'System Architecture Diagram'
+}
+
+export function captureRawMermaidDiagrams(rawText = '') {
+    if (!rawText || typeof rawText !== 'string') return ''
+
+    // First: split any lines where a mermaid diagram starter is conjoined to text
+    // e.g. "Here is the diagram flowchart TB" -> "Here is the diagram\nflowchart TB"
+    // Split lines where a mermaid diagram starter is conjoined to text
+    // BUT NOT if it starts with markdown heading hashes e.g. "# flowchart TB"
+    let normalized = rawText.replace(
+        /(^|\n)(?![ \t]*#{1,6}\s+)([^\n`]*?\S)[ \t]+((?:flowchart|graph)\s+(?:TD|TB|BT|RL|LR)|sequenceDiagram|classDiagram(?:-v2)?|stateDiagram(?:-v2)?|erDiagram|gantt|gitGraph|mindmap|timeline|quadrantChart|journey|pie|sankey-beta|block-beta|xychart-beta)\b/gi,
+        '$1$2\n$3'
+    )
+
+    const lines = normalized.split(/\r?\n/)
+    const output = []
+    let inDiagram = false
+    let currentDiagram = []
+    let subgraphDepth = 0
+
+    const isStartLine = (l) => {
+        const trimmed = l.trim()
+        if (!trimmed) return false
+        if (/^#{1,6}\s+/.test(trimmed)) return false
+        return /^(?:flowchart|graph)\s+(?:TD|TB|BT|RL|LR)\b/i.test(trimmed) ||
+            /^(?:sequenceDiagram|classDiagram(?:-v2)?|stateDiagram(?:-v2)?|erDiagram|gantt|gitGraph|mindmap|timeline|quadrantChart|journey|pie|sankey-beta|block-beta|xychart-beta)\b/i.test(trimmed)
+    }
+
+    const isEndLine = (l) => {
+        const trimmed = l.trim()
+        if (/^#{1,6}\s+/.test(trimmed)) return true
+        if (/^:::/.test(trimmed)) return true
+        if (trimmed.startsWith('XXCODETOKEN') || trimmed.startsWith('XXIMGTOKEN') || trimmed.startsWith('XXDIAGRAMMARKER')) return true
+        return false
+    }
+
+    const isDiagramLine = (l) => {
+        const trimmed = l.trim()
+        if (!trimmed) return true
+        if (isEndLine(l)) return false
+        if (isStartLine(l)) return false
+
+        // Comments
+        if (/^%%/.test(trimmed)) return true
+
+        // Subgraph, direction, and block control keywords
+        if (/^(subgraph|end|direction|style|classDef|class|click|linkStyle|autonumber|participant|actor|Note|loop|alt|opt|par|critical|rect|activate|deactivate|box|create|destroy)\b/i.test(trimmed)) {
+            return true
+        }
+
+        // Specific diagram meta keywords
+        if (/^(title|dateFormat|section|axisFormat|todayMarker|accTitle|accDescr|state|commit|branch|checkout|merge|cherry-pick)\b/i.test(trimmed)) {
+            return true
+        }
+
+        // Connectors and relationships
+        if (/(-->|---|-.->|==>|<-|<--|\.\->|-->\||--\s*\||-\.\->\||==>\||-->>|->>|--\)|-\)|->|\+|-)/.test(trimmed)) {
+            return true
+        }
+        if (/(\|{1,2}\||\|o|o\||\}\||\{\||\}\o|\o\{)/.test(trimmed)) return true
+
+        // Node definitions with brackets, braces, shapes
+        if (/^[a-zA-Z0-9_.-]+(\[|\(|\{|\(\(|\[\[|\[\/|\/\[|\(\[\/|{{|\[\(|\(\[|>)/.test(trimmed)) return true
+
+        // If currently inside a subgraph, any line that is indented or has node-like text belongs to the subgraph
+        if (subgraphDepth > 0) {
+            return true
+        }
+
+        // Generic indented lines with mermaid characters
+        if (/^(\s{2,}|\t)/.test(l) && (
+            trimmed.includes('[') || trimmed.includes('(') || trimmed.includes('{') || 
+            trimmed.includes('-->') || trimmed.includes('|') || trimmed.includes('---') ||
+            /^[a-zA-Z0-9_.-]+$/.test(trimmed)
+        )) {
+            return true
+        }
+
+        // Standalone node definitions or chain e.g. "A & B --> C"
+        if (/^[a-zA-Z0-9_.-]+(\s*&\s*[a-zA-Z0-9_.-]+)*\s*(-->|---|-.->|==>)/.test(trimmed)) return true
+
+        return false
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i]
+        const trimmed = line.trim()
+
+        if (!inDiagram) {
+            if (isStartLine(line)) {
+                inDiagram = true
+                currentDiagram = [line]
+                subgraphDepth = 0
+            } else {
+                output.push(line)
+            }
+        } else {
+            if (/^subgraph\b/i.test(trimmed)) {
+                subgraphDepth++
+            } else if (/^end\b/i.test(trimmed)) {
+                subgraphDepth = Math.max(0, subgraphDepth - 1)
+            }
+
+            if (isDiagramLine(line)) {
+                currentDiagram.push(line)
+            } else {
+                while (currentDiagram.length > 0 && !currentDiagram[currentDiagram.length - 1].trim()) {
+                    currentDiagram.pop()
+                }
+                const nonCommentLines = currentDiagram.filter(l => l.trim().length > 0 && !l.trim().startsWith('%%'))
+                const hasContent = nonCommentLines.length >= 2 || (
+                    nonCommentLines.length === 1 && /(-->|---|-.->|==>|->>|\[|\(|\{|\:)/.test(nonCommentLines[0])
+                )
+                if (hasContent) {
+                    output.push('\n```mermaid\n' + currentDiagram.join('\n') + '\n```\n')
+                } else {
+                    output.push(...currentDiagram)
+                }
+                inDiagram = false
+                currentDiagram = []
+                subgraphDepth = 0
+                output.push(line)
+            }
+        }
+    }
+
+    if (inDiagram && currentDiagram.length > 0) {
+        while (currentDiagram.length > 0 && !currentDiagram[currentDiagram.length - 1].trim()) {
+            currentDiagram.pop()
+        }
+        const nonCommentLines = currentDiagram.filter(l => l.trim().length > 0 && !l.trim().startsWith('%%'))
+        const hasContent = nonCommentLines.length >= 2 || (
+            nonCommentLines.length === 1 && /(-->|---|-.->|==>|->>|\[|\(|\{|\:)/.test(nonCommentLines[0])
+        )
+        if (hasContent) {
+            output.push('\n```mermaid\n' + currentDiagram.join('\n') + '\n```\n')
+        } else {
+            output.push(...currentDiagram)
+        }
+    }
+
+    return output.join('\n')
+}
+
 export function formatMathAndMarkdown(rawText) {
     if (!rawText || typeof rawText !== 'string') return ''
     let text = rawText
@@ -98,34 +291,125 @@ export function formatMathAndMarkdown(rawText) {
         return token
     })
 
-    // 0. Replace "Where FFN fits in a Transformer" text diagram with dedicated diagram token
+    // Automatically capture raw un-fenced Mermaid diagrams and protect them
+    text = captureRawMermaidDiagrams(text)
+    text = text.replace(/```mermaid[\s\S]*?```/g, (match) => {
+        const token = `XXCODETOKEN${protectedCodes.length}XX`
+        protectedCodes.push({ token, match })
+        return token
+    })
+
+    // Protect all inline code spans (`...`) from text/math transformations
+    const protectedInlineCodes = []
+    text = text.replace(/`([^`\n]+)`/g, (match) => {
+        const token = `XXINLINECODETOKEN${protectedInlineCodes.length}XX`
+        protectedInlineCodes.push({ token, match })
+        return token
+    })
+
+    // Protect existing diagram markers (:::pipeline-flow:::, etc.) so downstream regex never alters them
+    const protectedMarkers = []
+    text = text.replace(/(?:\r?\n)*:::\s*([a-zA-Z0-9_-]+)\s*:::(?:\r?\n)*/g, (_, markerName) => {
+        const token = `XXDIAGRAMMARKER${protectedMarkers.length}XX`
+        protectedMarkers.push({ token, marker: `:::${markerName.toLowerCase()}:::` })
+        return `\n\n${token}\n\n`
+    })
+
+    // Convert legacy diagram markers or text diagrams directly to Mermaid diagrams
+    text = text.replace(/:::\s*(?:ffn-transformer-flow|ffn-flow|ffn)\s*:::/gi, `
+\`\`\`mermaid
+flowchart TD
+    A["Token representations (Input vectors)"] --> B["Self-attention (Mixes information between tokens)"]
+    B --> C["FFN (Transforms each token's features)"]
+    C --> D["Updated representations (Ready for the next layer)"]
+    style B stroke:#2677ff,stroke-width:1.5px
+    style C stroke:#00c853,stroke-width:1.5px
+\`\`\`
+`)
+
+    text = text.replace(/:::\s*(?:pipeline-flow|pipeline)\s*:::/gi, `
+\`\`\`mermaid
+flowchart TD
+    A["Input context: The weather is cold"] --> B["Transformer: h = [0.8, 0.2, 0.5]"]
+    B --> C["Language Model Head: z = h W_vocab"]
+    C --> D["Softmax: Turns scores into probabilities"]
+    D --> E["Choose next token: today"]
+    style C stroke:#2677ff,stroke-width:1.5px
+    style E stroke:#00c853,stroke-width:1.5px
+\`\`\`
+`)
+
+    text = text.replace(/:::\s*(?:logits-chart|logits)\s*:::/gi, `
+\`\`\`mermaid
+flowchart LR
+    subgraph Logits["Explore the Logits (Raw scores z)"]
+    A["today: +1.30"]
+    B["outside: +0.50"]
+    C["because: +0.70"]
+    D["warm: +0.10"]
+    E[".: -0.25"]
+    end
+    style A fill:#1e3a8a,stroke:#3b82f6
+\`\`\`
+`)
+
+    text = text.replace(/:::\s*(?:probabilities-chart|probabilities)\s*:::/gi, `
+\`\`\`mermaid
+flowchart LR
+    subgraph Probs["Next-Token Probabilities P(i)"]
+    A["today: 39.8%"]
+    B["outside: 17.9%"]
+    C["because: 21.9%"]
+    D["warm: 12.0%"]
+    E[".: 8.5%"]
+    end
+    style A fill:#064e3b,stroke:#10b981
+\`\`\`
+`)
+
+    text = text.replace(/:::\s*(?:multi-position-diagram|multi-position)\s*:::/gi, `
+\`\`\`mermaid
+flowchart TD
+    subgraph Context["One Vector Per Position"]
+    A["'The': h1"] --- B["'weather': h2"] --- C["'is': h3"] --- D["'cold': h4"]
+    end
+    Context --> E["Shared Language Model Head: Z = H W_vocab"]
+    style D stroke:#3b82f6,stroke-width:1.5px
+    style E stroke:#10b981,stroke-width:1.5px
+\`\`\`
+`)
+
+    // 0. Replace "Where FFN fits in a Transformer" text diagram with clean Mermaid flowchart
     const ffnDiagramPattern = /(?:###?\s*)?Where FFN fits in a Transformer[\s\S]*?Token representations[\s\S]*?Input vectors[\s\S]*?Self-attention[\s\S]*?FFN[\s\S]*?Updated representations[\s\S]*?Ready for the next layer(?:\s*\n+Simplified view[^\n]*)?/i
     if (ffnDiagramPattern.test(text)) {
-        text = text.replace(ffnDiagramPattern, '\n\n:::ffn-transformer-flow:::\n\n')
+        text = text.replace(ffnDiagramPattern, `
+\`\`\`mermaid
+flowchart TD
+    A["Token representations (Input vectors)"] --> B["Self-attention (Mixes information between tokens)"]
+    B --> C["FFN (Transforms each token's features)"]
+    C --> D["Updated representations (Ready for the next layer)"]
+    style B stroke:#2677ff,stroke-width:1.5px
+    style C stroke:#00c853,stroke-width:1.5px
+\`\`\`
+`)
     }
 
-    // 1. Replace "The entire idea in one picture" text diagram with dedicated diagram token
+    // 1. Replace "The entire idea in one picture" text diagram with clean Mermaid flowchart
     const entireIdeaPattern = /The entire idea in one picture[\s\S]*?Choose the next token[\s\S]*?For greedy decoding, choose\s+today[^\n]*/i
     if (entireIdeaPattern.test(text)) {
-        text = text.replace(entireIdeaPattern, '### The entire idea in one picture\n\n:::pipeline-flow:::\n')
-    }
+        text = text.replace(entireIdeaPattern, `
+### The entire idea in one picture
 
-    // 2. Replace "Explore the logits" with interactive logits chart token
-    const logitsPattern = /Explore the logits[\s\S]*?These are the raw scores before softmax[\s\S]*?today\s+1\.30[\s\S]*?\.\s+-0\.25/i
-    if (logitsPattern.test(text)) {
-        text = text.replace(logitsPattern, ':::logits-chart:::\n')
-    }
-
-    // 3. Replace "Final next-token probabilities" with probability chart token
-    const probsPattern = /Final next-token probabilities[\s\S]*?today[\s\S]*?39\.8%[\s\S]*?\.\s+8\.5%/i
-    if (probsPattern.test(text)) {
-        text = text.replace(probsPattern, ':::probabilities-chart:::\n')
-    }
-
-    // 4. Replace "One vector per position" with multi-position diagram token
-    const multiPosPattern = /One vector per position[\s\S]*?Shared Language Model Head[\s\S]*?Predict next token/i
-    if (multiPosPattern.test(text)) {
-        text = text.replace(multiPosPattern, ':::multi-position-diagram:::\n')
+\`\`\`mermaid
+flowchart TD
+    A["Input context: The weather is cold"] --> B["Transformer: h = [0.8, 0.2, 0.5]"]
+    B --> C["Language Model Head: z = h W_vocab"]
+    C --> D["Softmax: Turns scores into probabilities"]
+    D --> E["Choose next token: today"]
+    style C stroke:#2677ff,stroke-width:1.5px
+    style E stroke:#00c853,stroke-width:1.5px
+\`\`\`
+`)
     }
 
     // 5. Fix concatenated Python code from ChatGPT copy-paste
@@ -195,20 +479,50 @@ logits = lm_head(x)
     // Strip all \boxed{...} frames cleanly handling nested braces so no output is ever wrapped in a rectangular box
     text = stripBoxed(text)
 
-    // Format wordings in subscripts (e.g. W_{\text{vocab}}, W_{vocab}, z_{outside}) matching screenshot
-    text = text.replace(/\\scriptscriptstyle/g, '')
-    text = text.replace(/_\{(\\text\{[a-zA-Z0-9_-]+\})\}/g, '_$1')
-    text = text.replace(/_\{([a-zA-Z]{2,})\}/g, '_{\\text{$1}}')
-    text = text.replace(/_([a-zA-Z]{3,})/g, '_{\\text{$1}}')
-    text = text.replace(/Wvocab/g, 'W_{\\text{vocab}}')
-    text = text.replace(/W_\{vocab\}/g, 'W_{\\text{vocab}}')
-    text = text.replace(/W_vocab/g, 'W_{\\text{vocab}}')
-    text = text.replace(/zoutside/g, 'z_{\\text{outside}}')
-    text = text.replace(/z_outside/g, 'z_{\\text{outside}}')
-    text = text.replace(/ztoday/g, 'z_{\\text{today}}')
-    text = text.replace(/z_today/g, 'z_{\\text{today}}')
-    text = text.replace(/zbecause/g, 'z_{\\text{because}}')
-    text = text.replace(/z_because/g, 'z_{\\text{because}}')
+    // Protect all display math blocks ($$ ... $$)
+    const protectedDisplayMath = []
+    text = text.replace(/\$\$[\s\S]*?\$\$/g, (match) => {
+        let mathContent = match
+        mathContent = mathContent.replace(/\\scriptscriptstyle/g, '')
+        mathContent = mathContent.replace(/_\{(\\text\{[a-zA-Z0-9_-]+\})\}/g, '_$1')
+        mathContent = mathContent.replace(/_\{([a-zA-Z]{2,})\}/g, '_{\\text{$1}}')
+        mathContent = mathContent.replace(/Wvocab/g, 'W_{\\text{vocab}}')
+        mathContent = mathContent.replace(/W_\{vocab\}/g, 'W_{\\text{vocab}}')
+        mathContent = mathContent.replace(/W_vocab/g, 'W_{\\text{vocab}}')
+        mathContent = mathContent.replace(/zoutside/g, 'z_{\\text{outside}}')
+        mathContent = mathContent.replace(/z_outside/g, 'z_{\\text{outside}}')
+        mathContent = mathContent.replace(/ztoday/g, 'z_{\\text{today}}')
+        mathContent = mathContent.replace(/z_today/g, 'z_{\\text{today}}')
+        mathContent = mathContent.replace(/zbecause/g, 'z_{\\text{because}}')
+        mathContent = mathContent.replace(/z_because/g, 'z_{\\text{because}}')
+        const token = `XXDISPLAYMATHTOKEN${protectedDisplayMath.length}XX`
+        protectedDisplayMath.push({ token, match: mathContent })
+        return token
+    })
+
+    // Protect all inline math blocks ($ ... $)
+    const protectedInlineMath = []
+    text = text.replace(/\$([^$\n]+)\$/g, (match) => {
+        let mathContent = match
+        mathContent = mathContent.replace(/\\scriptscriptstyle/g, '')
+        mathContent = mathContent.replace(/_\{(\\text\{[a-zA-Z0-9_-]+\})\}/g, '_$1')
+        mathContent = mathContent.replace(/_\{([a-zA-Z]{2,})\}/g, '_{\\text{$1}}')
+        mathContent = mathContent.replace(/Wvocab/g, 'W_{\\text{vocab}}')
+        mathContent = mathContent.replace(/W_\{vocab\}/g, 'W_{\\text{vocab}}')
+        mathContent = mathContent.replace(/W_vocab/g, 'W_{\\text{vocab}}')
+        mathContent = mathContent.replace(/zoutside/g, 'z_{\\text{outside}}')
+        mathContent = mathContent.replace(/z_outside/g, 'z_{\\text{outside}}')
+        mathContent = mathContent.replace(/ztoday/g, 'z_{\\text{today}}')
+        mathContent = mathContent.replace(/z_today/g, 'z_{\\text{today}}')
+        mathContent = mathContent.replace(/zbecause/g, 'z_{\\text{because}}')
+        mathContent = mathContent.replace(/z_because/g, 'z_{\\text{because}}')
+        const token = `XXINLINEMATHTOKEN${protectedInlineMath.length}XX`
+        protectedInlineMath.push({ token, match: mathContent })
+        return token
+    })
+
+    // Clean any erroneously mangled LaTeX subscripts in plain text outside math (e.g. n_{\text{embd}} -> n_embd)
+    text = text.replace(/([a-zA-Z0-9]+)_\{(\\text\{([a-zA-Z0-9_]+)\}|([a-zA-Z0-9_]+))\}/g, (_, p1, p2, p3, p4) => `${p1}_${p3 || p4}`)
 
     // 9. Format candidate tokens into dark pill badges (`today`, `outside`) matching screenshots
     text = text.replace(/The score for\s+today\s+is\s+1\.3/g, 'The score for `today` is 1.3')
@@ -263,25 +577,88 @@ logits = lm_head(x)
     text = processedLines.join('\n')
 
     // 11. Section & Step Headings (only if not already markdown headings)
-    text = text.replace(/^(?<!#+\s+)(Part\s+\d+[\s:—–-].*)$/gm, '\n## $1\n')
-    text = text.replace(/^(?<!#+\s+)(Example\s+[A-Z0-9]+[\s:—–-].*)$/gm, '\n### $1\n')
-    // Opening title if it starts with question format
-    text = text.replace(/^(?<!#+\s+)(How does .*?\?|What does .*?\?|Why does .*?\?|What happens .*?\?)$/m, '\n# $1\n')
-    // Remaining question section headings in the body
-    text = text.replace(/^(?<!#+\s+)(How does .*?\?|What does .*?\?|Why does .*?\?|What happens .*?\?)$/gm, '\n### $1\n')
+    text = text.replace(/^(?<!#+\s*)(Part\s+\d+[\s:—–-].*)$/gm, '\n## $1\n\n')
+    text = text.replace(/^(?<!#+\s*)(Example\s+[A-Z0-9]+[\s:—–-].*)$/gm, '\n### $1\n\n')
+    text = text.replace(/^(?<!#+\s*)(Step\s+\d+[\s:—–-].*)$/gm, '\n### $1\n\n')
+
+    // Question headings (both numbered e.g. "4. Why can one head be insufficient?" and unnumbered e.g. "How does ... ?")
+    const hasExistingH1 = /^#\s+\S+/m.test(text)
+    if (!hasExistingH1) {
+        text = text.replace(/^(?<!#+\s*)((?:\d+[\.\)]\s+)?(?:How|What|Why|Where|When|Who|Which|Can|Could|Should|Is|Are|Do|Does|What happens)\b[^\n]*\?)$/m, '\n# $1\n\n')
+    }
+    text = text.replace(/^(?<!#+\s*)((?:\d+[\.\)]\s+)?(?:How|What|Why|Where|When|Who|Which|Can|Could|Should|Is|Are|Do|Does|What happens)\b[^\n]*\?)$/gm, '\n### $1\n\n')
+
+    // 12. Separate lists from following regular text paragraphs
+    // Prevents CommonMark from swallowing paragraphs directly following list items
+    const textLines = text.split('\n')
+    const separatedLines = []
+    let inList = false
+
+    for (let i = 0; i < textLines.length; i++) {
+        const line = textLines[i]
+        const trimmed = line.trim()
+        const isListLine = /^([-*+]|\d+[\.\)])\s+\S/.test(trimmed)
+        const isHeading = /^#{1,6}\s+/.test(trimmed)
+        const isFence = /^```/.test(trimmed)
+        const isBlank = trimmed.length === 0
+        const isDiagramMarker = /^:::/.test(trimmed)
+        const isQuote = /^>/.test(trimmed)
+        const isTable = /^\|/.test(trimmed)
+
+        if (isListLine) {
+            inList = true
+        } else if (isBlank || isHeading || isFence || isDiagramMarker) {
+            inList = false
+        } else if (inList) {
+            const isIndented = /^(\s{2,}|\t)/.test(line)
+            if (!isIndented && !isQuote && !isTable) {
+                separatedLines.push('')
+                inList = false
+            }
+        }
+
+        separatedLines.push(line)
+    }
+    text = separatedLines.join('\n')
 
     // Clean up excessive consecutive blank lines
-    text = text.replace(/\n{4,}/g, '\n\n\n')
+    text = text.replace(/\n{3,}/g, '\n\n')
+
+    // Restore protected inline math safely using replacer function to avoid $ interpretation
+    protectedInlineMath.forEach(({ token, match }) => {
+        text = text.replace(token, () => match)
+    })
+
+    // Restore protected display math safely using replacer function to avoid $$ interpretation
+    protectedDisplayMath.forEach(({ token, match }) => {
+        text = text.replace(token, () => match)
+    })
+
+    // Restore protected inline code
+    protectedInlineCodes.forEach(({ token, match }) => {
+        text = text.replace(token, () => match)
+    })
 
     // Restore protected code blocks
     protectedCodes.forEach(({ token, match }) => {
-        text = text.replace(token, match)
+        text = text.replace(token, () => match)
     })
 
     // Restore protected images with verified clean URLs
     protectedImages.forEach(({ token, match }) => {
-        text = text.replace(token, match)
+        text = text.replace(token, () => match)
     })
+
+    // Restore protected diagram markers with consistent spacing
+    protectedMarkers.forEach(({ token, marker }) => {
+        text = text.replace(token, () => marker)
+    })
+
+    // Clean any empty or stub mermaid code blocks that might have slipped through
+    text = text.replace(/```mermaid\s*(?:(?:flowchart|graph)\s+[A-Z]{2}|sequenceDiagram|classDiagram(?:-v2)?|stateDiagram(?:-v2)?|erDiagram|gantt|pie|gitGraph|mindmap|timeline)?\s*```/gi, '')
+
+    // Clean stray empty markdown headings
+    text = text.replace(/^#{1,6}\s*$/gm, '')
 
     return text.trim()
 }
@@ -293,7 +670,7 @@ logits = lm_head(x)
 export function getPlainTextExcerpt(content = '', maxLength = 140) {
     if (!content) return ''
     let clean = content
-        .replace(/:::[a-z-]+:::/gi, '')
+        .replace(/:::[a-zA-Z0-9_-]+:::/gi, '')
         .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
         .replace(/```[\s\S]*?```/g, '')
         .replace(/\$\$[\s\S]*?\$\$/g, '')
@@ -318,7 +695,7 @@ export function getPlainTextExcerpt(content = '', maxLength = 140) {
  */
 export function calculateReadingStats(content = '') {
     const clean = content
-        .replace(/:::[a-z-]+:::/gi, ' ')
+        .replace(/:::[a-zA-Z0-9_-]+:::/gi, ' ')
         .replace(/```[\s\S]*?```/g, ' [code] ')
         .replace(/\$\$[\s\S]*?\$\$/g, ' [formula] ')
         .replace(/\s+/g, ' ')

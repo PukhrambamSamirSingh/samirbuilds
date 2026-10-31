@@ -1,2 +1,0 @@
-bg-[url("../src/assets/13077.jpg")]
-bg-linear-to-r from-gray-900 via-gray-800 to-gray-400

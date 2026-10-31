@@ -233,11 +233,16 @@ body:not(.dark) .btn-ghost:hover {
 }
 
 .katex .msupsub .katex-sizing {
-  font-size: 0.64em !important;
+  font-size: 0.74em !important;
 }
 
 .katex .msupsub .mord.text,
 .katex .msupsub .text {
+  font-size: 0.74em !important;
+}
+
+.katex .msupsub .mord.text .mord,
+.katex .msupsub .text .mord {
   font-size: 1em !important;
   font-weight: 500 !important;
   letter-spacing: 0.01em !important;
@@ -245,14 +250,14 @@ body:not(.dark) .btn-ghost:hover {
 
 /* Plain HTML sub and sup styling to match */
 sub {
-  font-size: 0.64em;
-  vertical-align: -0.25em;
+  font-size: 0.74em;
+  vertical-align: -0.22em;
   line-height: 0;
 }
 
 sup {
-  font-size: 0.64em;
-  vertical-align: 0.35em;
+  font-size: 0.74em;
+  vertical-align: 0.32em;
   line-height: 0;
 }
 
@@ -267,7 +272,7 @@ sup {
 
 /* Subscripts (lower word like "vocab" in W_vocab) appear noticeably lower */
 .katex .msupsub > .vlist-t.vlist-t2 > .vlist-r:first-child .vlist > span:first-child {
-  transform: translateY(0.18em) !important;
+  transform: translateY(0.14em) !important;
 }
 
 .katex-display {

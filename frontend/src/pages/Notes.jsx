@@ -4,36 +4,40 @@ import Navbar from '../components/Navbar'
 import { NoteGridCard } from '../components/NoteCard'
 import AddNote from '../components/AddNote'
 import DeleteNoteModal from '../components/DeleteNoteModal'
+import Pagination from '../components/Pagination'
 import { useTheme } from '../context/ThemeContext'
-import { SAMPLE_TRANSFORMER_NOTE } from '../utils/defaultNotes'
+
 import { deleteNoteApi } from '../utils/authUtils'
-import { FiSearch, FiPlus, FiTag, FiBookOpen } from 'react-icons/fi'
+import { FiSearch, FiPlus } from 'react-icons/fi'
 import LoadingSpinner from '../components/LoadingSpinner'
 
-const TAG_FILTERS = ['all', 'ai/ml', 'math', 'web', 'python', 'general']
+const ITEMS_PER_PAGE = 8
 
 const Notes = () => {
     const navigate = useNavigate()
     const [notes, setNotes] = useState([])
-    const [selectedTag, setSelectedTag] = useState('all')
     const [searchQuery, setSearchQuery] = useState('')
+    const [currentPage, setCurrentPage] = useState(1)
     const [loading, setLoading] = useState(true)
     const [openAdd, setOpenAdd] = useState(false)
     const [noteToDelete, setNoteToDelete] = useState(null)
     const [noteToEdit, setNoteToEdit] = useState(null)
     const [deleting, setDeleting] = useState(false)
+    const [deleteError, setDeleteError] = useState(null)
     const { theme } = useTheme()
     const dark = theme === 'dark'
 
     const handleConfirmDelete = async () => {
         if (!noteToDelete) return
         setDeleting(true)
+        setDeleteError(null)
         try {
             await deleteNoteApi(noteToDelete)
             setNoteToDelete(null)
+            setDeleteError(null)
             await fetchNotes()
         } catch (err) {
-            alert(err.message || 'Failed to delete note')
+            setDeleteError(err.message || 'Failed to delete note')
         } finally {
             setDeleting(false)
         }
@@ -57,7 +61,7 @@ const Notes = () => {
         try {
             const rawLocal = localStorage.getItem('samirbuilds_notes')
             if (rawLocal) {
-                localNotes = JSON.parse(rawLocal)
+                localNotes = JSON.parse(rawLocal).filter(n => n?._id !== 'default-lm-head-transformer' && n?.slug !== 'how-does-the-language-model-head-work-in-a-transformer')
             }
         } catch (e) {
             console.error('Error reading local notes:', e)
@@ -83,14 +87,6 @@ const Notes = () => {
 
         let combined = Array.from(combinedMap.values())
 
-        // 4. If no notes exist anywhere, initialize with the Transformer LM Head sample note
-        if (combined.length === 0) {
-            combined = [SAMPLE_TRANSFORMER_NOTE]
-        } else if (!combined.some(n => n.title.includes('Language Model Head'))) {
-            // Also append the sample note if not present so user can always explore it
-            combined.push(SAMPLE_TRANSFORMER_NOTE)
-        }
-
         setNotes(combined)
         setLoading(false)
     }
@@ -99,80 +95,44 @@ const Notes = () => {
         fetchNotes()
     }, [])
 
-    // Filter notes based on active tag and search query
+    // Reset pagination to first page when searching
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [searchQuery])
+
+    // Filter notes based on search query
     const filteredNotes = notes.filter(note => {
-        const matchesTag = selectedTag === 'all' || (note.tag?.toLowerCase() === selectedTag.toLowerCase())
         const q = searchQuery.toLowerCase().trim()
-        const matchesSearch = !q || 
+        return !q || 
             (note.title?.toLowerCase().includes(q)) || 
             (note.content?.toLowerCase().includes(q)) ||
             (note.tag?.toLowerCase().includes(q))
-        return matchesTag && matchesSearch
     })
+
+    // Pagination calculations (8 items per page)
+    const totalPages = Math.ceil(filteredNotes.length / ITEMS_PER_PAGE)
+    const safeCurrentPage = Math.max(1, Math.min(currentPage, totalPages || 1))
+    const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE
+    const paginatedNotes = filteredNotes.slice(startIndex, startIndex + ITEMS_PER_PAGE)
 
     return (
         <div className={`min-h-screen ${dark ? 'bg-black text-white' : 'bg-slate-50 text-gray-900'} pb-16 flex flex-col justify-between transition-colors duration-300 font-sans`}>
             <div>
                 <Navbar />
 
-                <main className='max-w-7xl mx-auto px-4 sm:px-8 md:px-12 lg:px-20 py-8'>
-                    {/* ── Page Header ── */}
-                    <div className='flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 mb-6 border-0 border-none'>
-                        <div>
-                            <div className='flex items-center gap-2 mb-1'>
-                                <span className='text-xs font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border-0 border-none'>
-                                    Deep Dive Notes
-                                </span>
-                                <span className={`text-xs ${dark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                    KaTeX Math & Markdown
-                                </span>
-                            </div>
-                            <h1 className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${dark ? 'text-white' : 'text-gray-900'}`}>
-                                Learning & Research Notes
-                            </h1>
-                            <p className={`text-sm mt-1 max-w-xl ${dark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                Write notes with full support for mathematical symbols, matrices, code and tables.
-                            </p>
-                        </div>
-
-                        {/* Top Action */}
-                        <div className='flex items-center gap-3 self-start md:self-center'>
-                            <button
-                                type='button'
-                                onClick={handleNewNoteClick}
-                                className='inline-flex items-center gap-2 bg-[#ededf1] hover:bg-white text-[#070708] font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-full transition-all duration-200 active:scale-[0.98] shadow-sm cursor-pointer border-0 border-none'
-                            >
-                                <FiPlus className='text-base' />
-                                <span>New Note</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* ── Filter & Search Toolbar ── */}
-                    <div className='flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8'>
-                        {/* Tag Chips */}
-                        <div className='flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none'>
-                            <FiTag className={`text-sm mr-1 ${dark ? 'text-gray-500' : 'text-gray-400'}`} />
-                            {TAG_FILTERS.map(t => (
-                                <button
-                                    key={t}
-                                    type='button'
-                                    onClick={() => setSelectedTag(t)}
-                                    className={`px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-200 active:scale-[0.98] cursor-pointer whitespace-nowrap ${
-                                        selectedTag === t
-                                            ? 'bg-[#ededf1] hover:bg-white text-[#070708] font-bold shadow-sm border-0 border-none'
-                                            : dark
-                                                ? 'border border-white/15 bg-white/5 text-[#8e8e96] hover:text-[#ededf1] hover:border-white/30 hover:bg-white/10'
-                                                : 'border border-gray-300 bg-white text-gray-700 hover:text-black hover:border-gray-400 hover:bg-gray-50'
-                                    }`}
-                                >
-                                    {t}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Search Input */}
-                        <div className='relative w-full md:w-72'>
+                <main className='max-w-[1320px] mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-8 pt-6 md:pt-10 pb-8 md:pb-14'>
+                    {/* ── Action & Search Toolbar ── */}
+                    <div className='flex flex-row items-center justify-between gap-4 mb-8'>
+                        {/* Left: Notes Button */}
+                        <button
+                            type='button'
+                            onClick={() => setSearchQuery('')}
+                            className='inline-flex items-center gap-2 bg-[#ededf1] hover:bg-white text-[#070708] font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-full transition-all duration-200 active:scale-[0.98] shadow-sm cursor-pointer border-0 border-none shrink-0'
+                        >
+                            <span>Notes</span>
+                        </button>
+                        {/* Right: Search Input */}
+                        <div className='relative w-full max-w-xs sm:w-72'>
                             <FiSearch className={`absolute left-3.5 top-1/2 -translate-y-1/2 text-sm ${dark ? 'text-gray-500' : 'text-gray-400'}`} />
                             <input
                                 type='text'
@@ -213,45 +173,52 @@ const Notes = () => {
                                 No matching notes found
                             </h3>
                             <p className='text-xs sm:text-sm max-w-md'>
-                                {searchQuery || selectedTag !== 'all' 
-                                    ? `No notes matched tag "${selectedTag}" and query "${searchQuery}".` 
+                                {searchQuery 
+                                    ? `No notes matched query "${searchQuery}".` 
                                     : 'Start capturing what you learn every day.'}
                             </p>
                             <div className='flex gap-3 mt-4 flex-wrap justify-center'>
-                                {(searchQuery || selectedTag !== 'all') && (
+                                {searchQuery && (
                                     <button
                                         type='button'
-                                        onClick={() => { setSearchQuery(''); setSelectedTag('all') }}
+                                        onClick={() => setSearchQuery('')}
                                         className={`px-5 py-2.5 rounded-full text-xs font-semibold border transition-all active:scale-[0.98] cursor-pointer ${
                                             dark ? 'border-white/15 bg-white/5 text-[#ededf1] hover:bg-white/10' : 'border-gray-300 bg-white text-gray-800 hover:bg-gray-50'
                                         }`}
                                     >
-                                        Clear filters
+                                        Clear search
                                     </button>
                                 )}
-                                <button
-                                    type='button'
-                                    onClick={handleNewNoteClick}
-                                    className='inline-flex items-center gap-2 bg-[#ededf1] hover:bg-white text-[#070708] font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-full transition-all duration-200 active:scale-[0.98] shadow-sm cursor-pointer border-0 border-none'
-                                >
-                                    <FiPlus className='text-base' />
-                                    <span>New Note</span>
-                                </button>
                             </div>
                         </div>
                     ) : (
                         <div>
                             {/* Grid format of 3 to 4 columns */}
                             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
-                                {filteredNotes.map(note => (
+                                {paginatedNotes.map(note => (
                                     <NoteGridCard
                                         key={note._id || note.slug || note.title}
                                         note={note}
-                                        onDelete={setNoteToDelete}
+                                        onDelete={(n) => {
+                                            setNoteToDelete(n)
+                                            setDeleteError(null)
+                                        }}
                                         onEdit={setNoteToEdit}
                                     />
                                 ))}
                             </div>
+
+                            {/* Pagination Controls after 8 items */}
+                            {totalPages > 1 && (
+                                <Pagination
+                                    currentPage={safeCurrentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={(page) => {
+                                        setCurrentPage(page)
+                                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                                    }}
+                                />
+                            )}
                         </div>
                     )}
                 </main>
@@ -272,9 +239,13 @@ const Notes = () => {
             <DeleteNoteModal
                 isOpen={Boolean(noteToDelete)}
                 note={noteToDelete}
-                onClose={() => setNoteToDelete(null)}
+                onClose={() => {
+                    setNoteToDelete(null)
+                    setDeleteError(null)
+                }}
                 onConfirm={handleConfirmDelete}
                 loading={deleting}
+                error={deleteError}
             />
 
             {/* Edit Note Modal */}

@@ -58,21 +58,35 @@ async def get_blog(slug: str):
 # Updating a blog ------------------------------------------------------------
 
 async def update_blog(id: str, blog: UpdateBlog, current_user: Annotated[dict, Depends(get_current_user)]):
-    existing_blog = await db.blogs.find_one(
-        {
-            "_id": ObjectId(id)
-        }
-    )
+    clean_id = (id or "").strip()
+    query = {}
+    if ObjectId.is_valid(clean_id):
+        query = {"$or": [{"_id": ObjectId(clean_id)}, {"slug": clean_id.lower()}, {"slug": clean_id}]}
+    else:
+        query = {"$or": [{"slug": clean_id.lower()}, {"slug": clean_id}]}
+
+    existing_blog = await db.blogs.find_one(query)
 
     if not existing_blog:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Blog Not Found"
         )
     
-    if existing_blog["author"] != str(current_user["_id"]):
+    user_id_str = str(current_user["_id"])
+    user_email = str(current_user.get("email", "")).lower()
+    author_str = str(existing_blog.get("author", ""))
+    full_name = f"{current_user.get('first_name', '')} {current_user.get('last_name', '')}".strip().lower()
+
+    is_author = (
+        author_str == user_id_str or
+        author_str.lower() == user_email or
+        (full_name and author_str.lower() == full_name)
+    )
+
+    if not is_author:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not allowed to update this blog"
         )
     
@@ -88,12 +102,8 @@ async def update_blog(id: str, blog: UpdateBlog, current_user: Annotated[dict, D
         update_data["slug"] = slugify(update_data["title"])
     
     await db.blogs.update_one(
-        {
-            "_id": ObjectId(id)
-        },
-        {
-            "$set": update_data
-        }
+        {"_id": existing_blog["_id"]},
+        {"$set": update_data}
     )
     return {
         "message": "Blog updated successfully"
@@ -112,28 +122,39 @@ async def get_blogs():
 # Deleting a Blog --------------------------------------------------------------------
 
 async def delete_blog(id: str, current_user: Annotated[dict, Depends(get_current_user)]):
-    existing_blog = await db.blogs.find_one(
-        {
-            "_id": ObjectId(id)
-        }
-    )
+    clean_id = (id or "").strip()
+    query = {}
+    if ObjectId.is_valid(clean_id):
+        query = {"$or": [{"_id": ObjectId(clean_id)}, {"slug": clean_id.lower()}, {"slug": clean_id}]}
+    else:
+        query = {"$or": [{"slug": clean_id.lower()}, {"slug": clean_id}]}
+
+    existing_blog = await db.blogs.find_one(query)
     if not existing_blog:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Blog Not Found"
         )
     
-    if existing_blog["author"] != str(current_user["_id"]):
+    user_id_str = str(current_user["_id"])
+    user_email = str(current_user.get("email", "")).lower()
+    author_str = str(existing_blog.get("author", ""))
+    full_name = f"{current_user.get('first_name', '')} {current_user.get('last_name', '')}".strip().lower()
+
+    is_author = (
+        author_str == user_id_str or
+        author_str.lower() == user_email or
+        (full_name and author_str.lower() == full_name)
+    )
+
+    if not is_author:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="You are not allowed to delete this blog"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not allowed to delete this blog: only the author can delete it."
         )
     
-    await db.blogs.delete_one(
-        {
-            "_id": ObjectId(id)
-        }
-    )
+    await db.blogs.delete_one({"_id": existing_blog["_id"]})
     return {
-        "message": "Blog deleted successfully"
+        "message": "Blog deleted successfully",
+        "_id": str(existing_blog["_id"])
     }

@@ -2,7 +2,7 @@ import React from 'react'
 import { useTheme } from '../context/ThemeContext'
 import { FiTrash2, FiAlertTriangle, FiX } from 'react-icons/fi'
 
-const DeleteNoteModal = ({ isOpen, note, onClose, onConfirm, loading }) => {
+const DeleteNoteModal = ({ isOpen, note, onClose, onConfirm, loading, error }) => {
     const { theme } = useTheme()
     const dark = theme === 'dark'
 
@@ -63,6 +63,26 @@ const DeleteNoteModal = ({ isOpen, note, onClose, onConfirm, loading }) => {
                         All formatted LaTeX equations, diagrams, and written content will be removed from Samir Builds.
                     </p>
                 </div>
+
+                {/* Inline Error Notice */}
+                {error && (
+                    <div className={`p-3 rounded-xl text-xs flex items-center justify-between gap-2 border animate-fadeIn ${
+                        dark ? 'bg-red-500/10 border-red-500/30 text-red-300' : 'bg-red-50 border-red-200 text-red-700'
+                    }`}>
+                        <div className="flex items-center gap-2">
+                            <FiAlertTriangle className="text-red-400 flex-shrink-0 text-sm" />
+                            <span>{error}</span>
+                        </div>
+                        {error.toLowerCase().includes('sign in') && (
+                            <a
+                                href="/signin"
+                                className="underline font-semibold ml-2 hover:opacity-80 flex-shrink-0"
+                            >
+                                Sign In
+                            </a>
+                        )}
+                    </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex items-center justify-end gap-3 pt-2">

@@ -1,72 +1,113 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import AddBlog from './AddBlog'
 import { useTheme } from '../context/ThemeContext'
+import { isBlogAuthor } from '../utils/authUtils'
+import { cleanDuplicateTitle } from '../utils/markdownUtils'
+import { FiEdit2, FiTrash2, FiArrowRight } from 'react-icons/fi'
 
-const BlogSingle = ({blog}) => {
+const BlogSingle = ({ blog, onDelete, onEdit }) => {
     const navigate = useNavigate()
-    const [openAdd, setOpenAdd] = useState(false)
     const { theme } = useTheme()
-    
+    const dark = theme === 'dark'
+
     const capitalizeFirstLetter = (text) => {
-        if (!text) return "";
-        return text.charAt(0).toUpperCase() + text.slice(1);
+        if (!text) return ''
+        return text.charAt(0).toUpperCase() + text.slice(1)
     }
 
-    const handleAddBlogClick = () => {
-        const token = localStorage.getItem('token')
-        if (!token) {
-            navigate('/signup')
-            return
-        }
-        setOpenAdd(true)
-    }
-    
-    if (!blog) return null;
+    if (!blog) return null
+
+    const canManage = isBlogAuthor(blog)
 
     return (
-        <article className={`w-full flex flex-col gap-6 p-4 sm:p-6 rounded-2xl border ${theme === 'dark' ? 'bg-gray-900/60 border-gray-700 shadow-xl' : 'bg-white border-gray-200 shadow-md'}`}>
-            <div className={`flex flex-col gap-3 w-full ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                <span className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} italic text-xs sm:text-sm font-light`}>
-                    {blog.published_at ? new Date(blog.published_at).toDateString() : ''}
-                </span>
-                {blog.img && (
-                    <img 
-                        className={`w-full h-56 sm:h-72 md:h-96 lg:h-[28rem] object-cover rounded-xl border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}
-                        src={blog.img} 
-                        alt={blog.title || "Blog cover"} 
-                    />
-                )}
-                <span className='inline-block self-start text-xs font-semibold px-2.5 py-1 bg-blue-900/50 text-blue-300 rounded-md border border-blue-700/50 uppercase tracking-wide'>
-                    {capitalizeFirstLetter(blog.tag)}
-                </span>
-                <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight leading-snug ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                    {blog.title}
-                </h2>
-                <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} text-sm sm:text-base leading-relaxed`}>
-                    {blog.description ? (blog.description.length > 200 ? blog.description.slice(0, 200) + "..." : blog.description) : ""}
-                </p>
-                <div className='pt-1'>
-                    <Link to={`/blogs/${blog.slug}`} className='italic text-sm text-blue-500 hover:text-blue-400 underline inline-flex items-center gap-1 font-medium'>
-                        Read Full Article →
-                    </Link>
+        <article className="w-full flex flex-col gap-4 p-2 sm:p-4 rounded-none border-0 border-none transition-all duration-300 ease-out hover:-translate-y-1 bg-transparent">
+            <div className={`flex flex-col gap-2.5 sm:gap-3 w-full ${dark ? 'text-gray-300' : 'text-gray-700'}`}>
+                {/* Header Meta with Tag, Date, and Author Actions */}
+                <div className='flex items-center justify-between gap-3 flex-wrap'>
+                    <div className='flex items-center gap-2.5 flex-wrap'>
+                        <span className='inline-block text-xs font-semibold px-2.5 py-1 bg-blue-900/50 text-blue-300 rounded-none border-0 border-none uppercase tracking-wide'>
+                            {capitalizeFirstLetter(blog.tag || 'web')}
+                        </span>
+                        <span className={`${dark ? 'text-gray-400' : 'text-gray-500'} italic text-xs sm:text-sm font-light`}>
+                            {blog.published_at ? new Date(blog.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : ''}
+                        </span>
+                    </div>
+
+                    {/* Author Controls */}
+                    {canManage && (
+                        <div className='flex items-center gap-2'>
+                            {onEdit && (
+                                <button
+                                    type='button'
+                                    onClick={() => onEdit(blog)}
+                                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer border ${
+                                        dark 
+                                            ? 'border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400' 
+                                            : 'border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700'
+                                    }`}
+                                    title='Edit Article'
+                                >
+                                    <FiEdit2 className='text-xs' />
+                                    <span>Edit</span>
+                                </button>
+                            )}
+                            {onDelete && (
+                                <button
+                                    type='button'
+                                    onClick={() => onDelete(blog)}
+                                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer border ${
+                                        dark 
+                                            ? 'border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400' 
+                                            : 'border-red-200 bg-red-50 hover:bg-red-100 text-red-600'
+                                    }`}
+                                    title='Delete Article'
+                                >
+                                    <FiTrash2 className='text-xs' />
+                                    <span>Delete</span>
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
-                {blog.author && (
-                    <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} font-medium`}>by {blog.author}</p>
+
+                {/* Cover Image - Height matched to screenshot level (~320-330px) */}
+                {blog.img && (
+                    <Link to={`/blogs/${blog.slug || blog._id}`} className='group overflow-hidden rounded-none block'>
+                        <img 
+                            className='w-full h-56 sm:h-64 md:h-80 lg:h-[330px] object-cover rounded-none border-0 border-none transition-transform duration-300 group-hover:scale-[1.01]'
+                            src={blog.img} 
+                            alt={blog.title || 'Blog cover'} 
+                        />
+                    </Link>
                 )}
+
+                {/* Title */}
+                <h2 className={`text-xl sm:text-2xl font-bold tracking-tight leading-snug hover:text-blue-500 transition-colors ${
+                    dark ? 'text-white' : 'text-gray-900'
+                }`}>
+                    <Link to={`/blogs/${blog.slug || blog._id}`}>{blog.title}</Link>
+                </h2>
+
+                {/* Excerpt */}
+                <p className={`${dark ? 'text-gray-300' : 'text-gray-600'} text-sm leading-relaxed`}>
+                    {(() => { const desc = cleanDuplicateTitle(blog.title, blog.description); return desc ? (desc.length > 220 ? desc.slice(0, 220) + '...' : desc) : ''; })()}
+                </p>
+
+                {/* Author attribution & Read More */}
+                <div className='flex items-center justify-between gap-4 pt-1 flex-wrap'>
+                    <Link to={`/blogs/${blog.slug || blog._id}`} className='italic text-xs sm:text-sm text-blue-500 hover:text-blue-400 underline inline-flex items-center gap-1 font-medium'>
+                        <span>Read Full Article</span>
+                        <FiArrowRight className='text-sm' />
+                    </Link>
+                    {blog.author && (
+                        <p className={`text-xs ${dark ? 'text-gray-400' : 'text-gray-500'} font-medium`}>
+                            by {blog.author}
+                        </p>
+                    )}
+                </div>
             </div>
-            <button 
-                type='button'
-                className='inline-flex items-center gap-2 bg-[#ededf1] hover:bg-white text-[#070708] font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-full transition-all duration-200 active:scale-[0.98] shadow-sm cursor-pointer w-full sm:w-auto self-start border-0 border-none' 
-                onClick={handleAddBlogClick}
-            >
-                + Add New Blog
-            </button>
-            {openAdd && (
-                <AddBlog openAdd={openAdd} setOpenAdd={setOpenAdd}/>
-            )}
         </article>
     )
 }
 
-export default BlogSingle
+export default BlogSingle

@@ -34,7 +34,7 @@ const Home = () => {
             <div className="relative z-10 flex flex-col flex-1">
                 <Navbar />
 
-                <main className="px-4 sm:px-6 md:px-8 lg:px-8 pt-3 sm:pt-4 md:pt-6 pb-12 max-w-[1320px] mx-auto w-full flex-1 flex flex-col justify-start">
+                <main className="px-4 sm:px-6 md:px-8 lg:px-8 pt-6 md:pt-10 pb-8 md:pb-14 max-w-[1320px] mx-auto w-full flex-1 flex flex-col justify-start">
                     <div className="grid grid-cols-1 lg:grid-cols-[9fr_11fr] gap-6 lg:gap-8 items-start w-full">
                         {/* Left Column: Samir Builds Intro (45% width, fixed at top) */}
                         <div className="w-full min-w-0 flex flex-col justify-start pt-1 sm:pt-2">
@@ -81,7 +81,7 @@ const Home = () => {
 
                             {/* Original Paragraph */}
                             <p
-                                className={`text-xs sm:text-sm leading-relaxed font-normal mb-7 max-w-xl ${
+                                className={`text-base sm:text-lg md:text-[19px] leading-relaxed font-normal mb-8 max-w-2xl ${
                                     isDark ? 'text-gray-300' : 'text-gray-700'
                                 }`}
                             >

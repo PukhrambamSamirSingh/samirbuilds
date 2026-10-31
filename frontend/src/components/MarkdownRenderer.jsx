@@ -6,34 +6,18 @@ import remarkGfm from 'remark-gfm'
 import { cleanAndFormatChatGPTText } from '../utils/markdownUtils'
 import { useTheme } from '../context/ThemeContext'
 import { FiCopy, FiCheck } from 'react-icons/fi'
-import { 
-    PipelineFlowDiagram, 
-    LogitsScoreChart, 
-    ProbabilitiesChart, 
-    MultiPositionTokensDiagram,
-    FfnTransformerFlowDiagram 
-} from './NoteDiagrams'
+import MermaidDiagram from './MermaidDiagram'
 
 /**
- * Enhanced CodeBlock component with copy functionality
+ * Enhanced CodeBlock component with copy functionality & Mermaid diagram support
  */
 function CodeBlock({ node, inline, className, children, ...props }) {
     const { theme } = useTheme()
     const dark = theme === 'dark'
     const [copied, setCopied] = useState(false)
     const match = /language-(\w+)/.exec(className || '')
-    const language = match ? match[1] : ''
+    const language = match ? match[1].toLowerCase() : ''
     const codeString = String(children).replace(/\n$/, '')
-
-    const handleCopy = async () => {
-        try {
-            await navigator.clipboard.writeText(codeString)
-            setCopied(true)
-            setTimeout(() => setCopied(false), 2000)
-        } catch (err) {
-            console.error('Failed to copy code: ', err)
-        }
-    }
 
     if (inline) {
         return (
@@ -46,6 +30,21 @@ function CodeBlock({ node, inline, className, children, ...props }) {
                 {children}
             </code>
         )
+    }
+
+    // Render Mermaid diagrams into visual responsive diagrams
+    if (language === 'mermaid' || language === 'mermaid-diagram') {
+        return <MermaidDiagram code={codeString} />
+    }
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(codeString)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+        } catch (err) {
+            console.error('Failed to copy code: ', err)
+        }
     }
 
     return (
@@ -92,34 +91,12 @@ export default function MarkdownRenderer({ content, className = '' }) {
     const { theme } = useTheme()
     const dark = theme === 'dark'
 
-    // Clean and normalize text
+    // Clean and normalize text, LaTeX equations, and diagrams
     const processedContent = cleanAndFormatChatGPTText(content || '')
 
-    // Split markdown by custom interactive diagram markers
-    const parts = processedContent.split(/(:::[a-z-]+:::)/g)
-
-    const renderMarkdownChunk = (chunk, idx) => {
-        if (!chunk) return null
-
-        if (chunk === ':::pipeline-flow:::') {
-            return <PipelineFlowDiagram key={`diag-pipe-${idx}`} />
-        }
-        if (chunk === ':::ffn-transformer-flow:::' || chunk === ':::ffn-flow:::') {
-            return <FfnTransformerFlowDiagram key={`diag-ffn-${idx}`} />
-        }
-        if (chunk === ':::logits-chart:::') {
-            return <LogitsScoreChart key={`diag-logits-${idx}`} />
-        }
-        if (chunk === ':::probabilities-chart:::') {
-            return <ProbabilitiesChart key={`diag-probs-${idx}`} />
-        }
-        if (chunk === ':::multi-position-diagram:::') {
-            return <MultiPositionTokensDiagram key={`diag-multi-${idx}`} />
-        }
-
-        return (
+    return (
+        <div className={`prose-container w-full overflow-hidden leading-relaxed ${dark ? 'dark dark-math' : 'light light-math'} ${className}`}>
             <ReactMarkdown
-                key={`md-${idx}`}
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[[rehypeKatex, { throwOnError: false, strict: false }]]}
                 components={{
@@ -154,30 +131,33 @@ export default function MarkdownRenderer({ content, className = '' }) {
                         </h4>
                     ),
 
-                    p: ({ children }) => (
-                        <p className={`text-sm sm:text-base leading-relaxed my-3.5 font-normal ${
-                            dark ? 'text-zinc-200' : 'text-gray-800'
-                        }`}>
-                            {children}
-                        </p>
-                    ),
+                    p: ({ children }) => {
+                        if (!children || (typeof children === 'string' && !children.trim())) return null
+                        return (
+                            <p className={`text-sm sm:text-base leading-relaxed my-2 font-normal ${
+                                dark ? 'text-zinc-200' : 'text-gray-800'
+                            }`}>
+                                {children}
+                            </p>
+                        )
+                    },
 
                     ul: ({ children }) => (
-                        <ul className={`list-disc pl-6 space-y-1.5 my-3 text-sm sm:text-base ${
+                        <ul className={`list-disc pl-5 space-y-1 my-2 text-sm sm:text-base ${
                             dark ? 'text-zinc-300' : 'text-gray-700'
                         }`}>
                             {children}
                         </ul>
                     ),
                     ol: ({ children }) => (
-                        <ol className={`list-decimal pl-6 space-y-1.5 my-3 text-sm sm:text-base ${
+                        <ol className={`list-decimal pl-5 space-y-1 my-2 text-sm sm:text-base ${
                             dark ? 'text-zinc-300' : 'text-gray-700'
                         }`}>
                             {children}
                         </ol>
                     ),
                     li: ({ children }) => (
-                        <li className='leading-relaxed pl-1 my-1'>
+                        <li className='leading-relaxed pl-1 my-0.5'>
                             {children}
                         </li>
                     ),
@@ -306,14 +286,14 @@ export default function MarkdownRenderer({ content, className = '' }) {
                                 <div className={`overflow-hidden rounded-2xl border transition-all ${
                                     dark ? 'border-zinc-800 bg-zinc-950/60 shadow-[0_10px_30px_rgba(0,0,0,0.6)]' : 'border-gray-200 bg-gray-50 shadow-md'
                                 }`}>
-                                    <img
-                                        src={src}
-                                        alt={alt || 'Note Image'}
-                                        onError={handleImgError}
-                                        className='max-h-[550px] w-auto max-w-full object-contain mx-auto block'
-                                        loading='lazy'
-                                        {...props}
-                                    />
+                                <img
+                                    src={src}
+                                    alt={alt || 'Note Image'}
+                                    onError={handleImgError}
+                                    className='max-h-[550px] w-auto max-w-full object-contain mx-auto block'
+                                    loading='lazy'
+                                    {...props}
+                                />
                                 </div>
                                 {alt && alt !== 'image' && alt !== 'Note Image' && (
                                     <figcaption className={`text-xs mt-2.5 text-center italic ${dark ? 'text-zinc-400' : 'text-gray-500'}`}>
@@ -325,14 +305,8 @@ export default function MarkdownRenderer({ content, className = '' }) {
                     }
                 }}
             >
-                {chunk}
+                {processedContent}
             </ReactMarkdown>
-        )
-    }
-
-    return (
-        <div className={`prose-container w-full overflow-hidden leading-relaxed ${dark ? 'dark dark-math' : 'light light-math'} ${className}`}>
-            {parts.map((chunk, idx) => renderMarkdownChunk(chunk, idx))}
         </div>
     )
 }

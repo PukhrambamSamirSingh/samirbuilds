@@ -111,7 +111,7 @@ const SignIn = () => {
     <div className={`min-h-screen ${dark ? 'bg-black text-white' : 'bg-slate-50 text-gray-900'} flex flex-col justify-between transition-colors duration-300 font-sans`}>
       <div>
         <Navbar />
-        <main className='max-w-6xl mx-auto px-4 sm:px-8 py-8 sm:py-16 flex flex-col md:flex-row items-center justify-center gap-8 lg:gap-16'>
+        <main className='max-w-[1320px] mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-8 pt-6 md:pt-10 pb-8 md:pb-14 flex flex-col md:flex-row items-center justify-center gap-8 lg:gap-16'>
           {/* Left Info Banner */}
           <div className='w-full md:w-1/2 text-center md:text-left flex flex-col gap-4'>
             <span className='inline-block self-center md:self-start text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20'>

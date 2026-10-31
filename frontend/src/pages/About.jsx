@@ -54,7 +54,8 @@ const skills = [
     'Transformers',
     'Vector Embeddings',
     'Self-Attention',
-    'TailwindCSS'
+    'TailwindCSS',
+    'etc.'
 ]
 
 const About = () => {
@@ -66,14 +67,13 @@ const About = () => {
             <div>
                 <Navbar />
 
-                <main className='max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-8 md:py-14 flex flex-col gap-10'>
+                <main className='max-w-[1320px] mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-8 pt-6 md:pt-10 pb-8 md:pb-14 flex flex-col gap-10'>
                     {/* Author Section */}
                     <section
-                        className={`rounded-3xl border transition-all duration-300 p-6 sm:p-10 md:p-12 flex flex-col gap-8 ${isDark
-                            ? 'border-zinc-900 bg-black text-white shadow-sm'
-                            : 'border-gray-200 bg-white text-gray-900 shadow-sm'
-                            }`}
-                    >
+                        className={`transition-all duration-300 p-2 sm:p-6 md:p-8 flex flex-col gap-8 rounded-none border-0 border-none shadow-none bg-transparent ${isDark
+                            ? 'text-white'
+                            : 'text-gray-900'
+                        }`}>
                         {/* Centered Header: "Building Understanding" & "Learning one concept at a time" */}
                         <div className='flex flex-col items-center text-center'>
                             <p
@@ -173,14 +173,26 @@ const About = () => {
                                         className={`space-y-4 text-sm sm:text-base leading-relaxed ${isDark ? 'text-gray-300/90' : 'text-gray-700'
                                             }`}
                                     >
+                                        <h2 className={`text-xl sm:text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                            A little about me
+                                        </h2>
                                         <p>
-                                            My name is <strong className={isDark ? 'text-white font-semibold' : 'text-gray-900 font-semibold'}>Samir Singh</strong>. I'm a developer who enjoys building interactive web applications and exploring the core ideas powering Artificial Intelligence and Machine Learning.
+                                            I'm <strong className={isDark ? 'text-white font-semibold' : 'text-gray-900 font-semibold'}>Samir Singh</strong>, a developer who enjoys learning by building things and understanding how they work behind the scenes.
                                         </p>
                                         <p>
-                                            With practical experience across React.js, JavaScript, and Python, I build software while continuously deepening my knowledge in neural networks, Transformers, vector embeddings, self-attention, and the mathematics behind intelligent systems.
+                                            My learning process isn't always straightforward. Sometimes I come across concepts that are difficult to understand, especially when studying topics like neural networks, Transformers, or the mathematics behind machine learning. When that happens, I don't like moving on until I have a reasonable understanding of the idea. I look for different ways to understand it.
                                         </p>
                                         <p>
-                                            I believe the best way to learn is to understand not just <em>how</em> something works, but <em>why</em> it works — by experimenting, breaking concepts down to first principles, and building from the ground up.
+                                            I often start with YouTube tutorials and lectures. If a topic is still confusing, I go through the video transcript and use ChatGPT to break it down into smaller parts, explain the ideas step by step, and create diagrams or examples that make the process easier to follow. I ask questions, revisit explanations, work through small examples, and keep going until the pieces start to make sense.
+                                        </p>
+                                        <p>
+                                            I enjoy this process because it allows me to learn at my own pace. Whether I'm working on web development concepts or exploring Python, neural networks, and Transformers, I try to understand not just the final result, but the reasoning behind it.
+                                        </p>
+                                        <p>
+                                            I also use AI tools like ChatGPT and Gemini as part of my creative workflow. While building this website, I've used them to explore layout ideas, improve page structure, refine design details, and turn rough ideas into a more polished experience.
+                                        </p>
+                                        <p>
+                                            I'm still learning and discovering new things. That's what I enjoy the most.
                                         </p>
                                     </div>
 
@@ -228,11 +240,10 @@ const About = () => {
 
                     {/* Card 2: Learning Resources Followed */}
                     <section
-                        className={`rounded-3xl border p-6 sm:p-8 md:p-10 shadow-xl transition-all duration-300 ${isDark
-                            ? 'border-blue-900/40 bg-[#060b18]/90 text-white shadow-black/40'
-                            : 'border-gray-200 bg-white/95 text-gray-900 shadow-gray-200/50'
-                            }`}
-                    >
+                        className={`p-2 sm:p-6 md:p-8 transition-all duration-300 rounded-none border-0 border-none shadow-none bg-transparent ${isDark
+                            ? 'text-white'
+                            : 'text-gray-900'
+                        }`}>
                         <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1'>
                             <h2
                                 className={`text-2xl sm:text-3xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-gray-900'

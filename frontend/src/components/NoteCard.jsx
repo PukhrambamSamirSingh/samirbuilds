@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import MarkdownRenderer from './MarkdownRenderer'
-import { getPlainTextExcerpt, calculateReadingStats, titleToSlug } from '../utils/markdownUtils'
+import { getPlainTextExcerpt, calculateReadingStats, titleToSlug, cleanDuplicateTitle } from '../utils/markdownUtils'
 import { isNoteAuthor } from '../utils/authUtils'
 import { FiCopy, FiCheck, FiBookOpen, FiMaximize2, FiMinimize2, FiArrowRight, FiTrash2, FiEdit2 } from 'react-icons/fi'
 
@@ -52,13 +52,23 @@ export function NoteFeatured({ note, isLatest = true, onDelete, onEdit }) {
     const rawContent = note.content || ''
     const titleTrimmed = (note.title || '').trim().toLowerCase()
     const contentTrimmed = rawContent.trim().toLowerCase()
-    const hasTitleAtStart = contentTrimmed && (
+    const contentWithoutFences = contentTrimmed.replace(/^```[a-z0-9_-]*\s*/i, '')
+    const isTitleDiagramSyntax = /^(?:flowchart|graph)\s+(?:td|tb|bt|rl|lr)|^(?:sequencediagram|classdiagram|statediagram|erdiagram|gantt|gitgraph|mindmap|pie)/i.test(titleTrimmed)
+    const hasTitleAtStart = isTitleDiagramSyntax || (contentTrimmed && (
         contentTrimmed.startsWith(titleTrimmed) ||
         contentTrimmed.startsWith('# ' + titleTrimmed) ||
         contentTrimmed.startsWith('## ' + titleTrimmed) ||
-        contentTrimmed.startsWith('### ' + titleTrimmed)
-    )
-    const markdownContent = hasTitleAtStart ? rawContent : (note.title ? `# ${note.title}\n\n${rawContent}` : rawContent)
+        contentTrimmed.startsWith('### ' + titleTrimmed) ||
+        contentWithoutFences.startsWith(titleTrimmed)
+    ))
+    const hasHeadingTag = /^#{1,4}\s+/.test(rawContent.trim())
+    const markdownContent = isTitleDiagramSyntax
+        ? rawContent
+        : (hasHeadingTag
+            ? rawContent
+            : (note.title
+                ? `# ${note.title}\n\n${cleanDuplicateTitle(note.title, rawContent)}`
+                : rawContent))
 
     return (
         <article className={`relative w-full flex flex-col transition-all duration-200 border-0 border-none shadow-none bg-transparent ${

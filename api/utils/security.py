@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+# Default access token expiration: 30 days (43200 minutes)
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", str(60 * 24 * 30)))
 
 password_hash = PasswordHash.recommended()
 
@@ -30,7 +31,7 @@ def create_access_token(
     if expire_time:
         expire = datetime.now(timezone.utc) + expire_time
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
     to_encode.update(
         {"exp": expire}

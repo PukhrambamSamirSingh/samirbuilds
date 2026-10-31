@@ -1,7 +1,7 @@
 from models.user_model import (
     RegisterUser, LoginUser, VerifyOtpRequest, ResendOtpRequest
 )
-from dependencies.auth import get_current_user
+from dependencies.auth import get_current_user, get_current_admin
 from models.blog_model import (
     CreateBlog, UpdateBlog
 )
@@ -15,7 +15,17 @@ from routes.blog_route import (
     create_blog, get_blog, update_blog, get_blogs, delete_blog
 )
 from routes.note_route import (
-    create_note, get_notes, get_note, update_note, delete_note
+    create_note, get_notes, get_note, get_related_notes, update_note, delete_note
+)
+from routes.admin_route import (
+    admin_login,
+    verify_admin_secret,
+    get_admin_settings,
+    update_admin_secret_key,
+    get_admin_stats,
+    AdminLoginRequest,
+    VerifySecretRequest,
+    UpdateSecretKeyRequest
 )
 from fastapi import FastAPI, Depends, HTTPException, Request, File, UploadFile, Form
 from fastapi.staticfiles import StaticFiles
@@ -28,7 +38,7 @@ import uuid
 import re
 from services.cloudinary_service import upload_to_cloudinary
 
-app = FastAPI()
+app = FastAPI(title="Samir Builds API")
 samirbuilds = app
 
 origins = [
@@ -174,57 +184,83 @@ async def get_me(
     current_user["_id"] = str(current_user["_id"])
     return current_user
 
-# ------------------- Blogs ---------------------
+# ------------------- Admin & Security -------------------
 
-# Creating a blog
+@app.post("/admin/login")
+async def login_admin_endpoint(data: AdminLoginRequest):
+    return await admin_login(data)
+
+@app.post("/admin/verify-secret")
+async def verify_secret_endpoint(data: VerifySecretRequest):
+    return await verify_admin_secret(data)
+
+@app.get("/admin/settings")
+async def admin_settings_endpoint(admin_user = Depends(get_current_admin)):
+    return await get_admin_settings(admin_user)
+
+@app.put("/admin/settings/secret-key")
+async def update_secret_key_endpoint(data: UpdateSecretKeyRequest, admin_user = Depends(get_current_admin)):
+    return await update_admin_secret_key(data, admin_user)
+
+@app.get("/admin/stats")
+async def admin_stats_endpoint(admin_user = Depends(get_current_admin)):
+    return await get_admin_stats(admin_user)
+
+# ------------------- Blogs (Admin-Protected Mutations) ---------------------
+
+# Creating a blog (Admin Only)
 @app.post("/blog/create")
-async def blog(blog: CreateBlog, current_user = Depends(get_current_user)):
-    print(current_user)
+async def blog(blog: CreateBlog, current_user = Depends(get_current_admin)):
     return await create_blog(blog, current_user)
 
-# Getting a blog
+# Getting a blog (Public)
 @app.get("/blogs/{slug}")
 async def getting_blog(slug: str):
     return await get_blog(slug)
     
-# Updating a blog
+# Updating a blog (Admin Only)
 @app.put("/blog/update/{id}")
-async def updating_blog(id: str, blog: UpdateBlog, current_user = Depends(get_current_user)):
+async def updating_blog(id: str, blog: UpdateBlog, current_user = Depends(get_current_admin)):
     return await update_blog(id, blog, current_user)
 
-# Get all blogs
+# Get all blogs (Public)
 @app.get("/blogs")
 async def get_all_blogs():
     return await get_blogs()
 
-# Deleting a blog
+# Deleting a blog (Admin Only)
 @app.delete("/blog/delete/{id}")
-async def deleting_blog(id: str, current_user = Depends(get_current_user)):
+async def deleting_blog(id: str, current_user = Depends(get_current_admin)):
     return await delete_blog(id, current_user)
 
-# ------------------- Notes ---------------------
+# ------------------- Notes (Admin-Protected Mutations) ---------------------
 
-# Creating a note
+# Creating a note (Admin Only)
 @app.post("/note/create")
-async def create_note_route(note: CreateNote, current_user = Depends(get_current_user)):
+async def create_note_route(note: CreateNote, current_user = Depends(get_current_admin)):
     return await create_note(note, current_user)
 
-# Get all notes
+# Get all notes (Public)
 @app.get("/notes")
 async def get_all_notes():
     return await get_notes()
 
-# Get a single note
+# Get related notes via vector / keyword scoring pipeline (Public)
+@app.get("/notes/{slug}/related")
+async def get_related_notes_route(slug: str, limit: int = 24):
+    return await get_related_notes(slug, limit)
+
+# Get a single note (Public)
 @app.get("/notes/{slug}")
 async def get_single_note(slug: str):
     return await get_note(slug)
 
-# Update a note
+# Update a note (Admin Only)
 @app.put("/note/update/{id}")
-async def update_note_route(id: str, note: UpdateNote, current_user = Depends(get_current_user)):
+async def update_note_route(id: str, note: UpdateNote, current_user = Depends(get_current_admin)):
     return await update_note(id, note, current_user)
 
-# Delete a note
+# Delete a note (Admin Only)
 @app.delete("/note/delete/{id}")
-async def delete_note_route(id: str, current_user = Depends(get_current_user)):
+async def delete_note_route(id: str, current_user = Depends(get_current_admin)):
     return await delete_note(id, current_user)

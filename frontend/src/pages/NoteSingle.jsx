@@ -3,13 +3,17 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { NoteFeatured, NoteGridCard } from '../components/NoteCard'
 import { useTheme } from '../context/ThemeContext'
-import { SAMPLE_TRANSFORMER_NOTE } from '../utils/defaultNotes'
+
 import { titleToSlug } from '../utils/markdownUtils'
 import { isNoteAuthor, deleteNoteApi } from '../utils/authUtils'
+import { calculateRelatedNotes } from '../utils/relatedNotes'
+import Pagination from '../components/Pagination'
 import DeleteNoteModal from '../components/DeleteNoteModal'
 import AddNote from '../components/AddNote'
 import { FiArrowLeft, FiTag, FiBookOpen } from 'react-icons/fi'
 import LoadingSpinner from '../components/LoadingSpinner'
+
+const RELATED_PER_PAGE = 6
 
 const NoteSingle = () => {
     const { slug } = useParams()
@@ -19,22 +23,27 @@ const NoteSingle = () => {
 
     const [note, setNote] = useState(null)
     const [relatedNotes, setRelatedNotes] = useState([])
+    const [relatedPage, setRelatedPage] = useState(1)
+    const [allNotesCount, setAllNotesCount] = useState(0)
     const [loading, setLoading] = useState(true)
     const [deleteModalOpen, setDeleteModalOpen] = useState(false)
     const [editModalOpen, setEditModalOpen] = useState(false)
     const [deleting, setDeleting] = useState(false)
+    const [deleteError, setDeleteError] = useState(null)
 
     const canDelete = isNoteAuthor(note)
 
     const handleConfirmDelete = async () => {
         if (!note) return
         setDeleting(true)
+        setDeleteError(null)
         try {
             await deleteNoteApi(note)
             setDeleteModalOpen(false)
+            setDeleteError(null)
             navigate('/notes', { replace: true })
         } catch (err) {
-            alert(err.message || 'Failed to delete note')
+            setDeleteError(err.message || 'Failed to delete note')
         } finally {
             setDeleting(false)
         }
@@ -42,6 +51,7 @@ const NoteSingle = () => {
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' })
+        setRelatedPage(1)
         fetchCurrentNote()
     }, [slug])
 
@@ -56,7 +66,7 @@ const NoteSingle = () => {
         try {
             const rawLocal = localStorage.getItem('samirbuilds_notes')
             if (rawLocal) {
-                localNotes = JSON.parse(rawLocal)
+                localNotes = JSON.parse(rawLocal).filter(n => n?._id !== 'default-lm-head-transformer' && n?.slug !== 'how-does-the-language-model-head-work-in-a-transformer')
             }
         } catch (e) {
             console.error('Error reading local notes:', e)
@@ -75,7 +85,21 @@ const NoteSingle = () => {
             console.warn('Backend single note fetch failed, trying local notes or default note.')
         }
 
-        // Also fetch all notes to populate related/more notes list
+        // 3. Try fetching related notes from backend MongoDB pipeline / vector scoring endpoint
+        let serverRelated = []
+        try {
+            const resRelated = await fetch(`http://127.0.0.1:8000/notes/${targetSlug}/related?limit=24`)
+            if (resRelated.ok) {
+                const relatedData = await resRelated.json()
+                if (Array.isArray(relatedData) && relatedData.length > 0) {
+                    serverRelated = relatedData
+                }
+            }
+        } catch (err) {
+            console.warn('Backend related notes query failed, fallback to client-side vector ranking.')
+        }
+
+        // Also fetch all notes to populate candidate pool
         try {
             const resAll = await fetch('http://127.0.0.1:8000/notes')
             if (resAll.ok) {
@@ -92,9 +116,9 @@ const NoteSingle = () => {
         const combinedMap = new Map()
         localNotes.forEach(n => combinedMap.set(n._id || n.slug || titleToSlug(n.title), n))
         remoteNotes.forEach(n => combinedMap.set(n._id || n.slug || titleToSlug(n.title), n))
-        combinedMap.set(SAMPLE_TRANSFORMER_NOTE.slug, SAMPLE_TRANSFORMER_NOTE)
 
         const allCombined = Array.from(combinedMap.values())
+        setAllNotesCount(allCombined.length)
 
         // Find the matched note by slug, or by title-slug, or by ID
         const matched = allCombined.find(n => {
@@ -104,27 +128,49 @@ const NoteSingle = () => {
 
         if (matched) {
             setNote(matched)
-            // Filter other notes for the "More Notes" row (up to 4)
-            const others = allCombined
-                .filter(n => (n.slug || titleToSlug(n.title)) !== (matched.slug || titleToSlug(matched.title)))
-                .slice(0, 4)
-            setRelatedNotes(others)
-        } else {
-            // Default fallback if matching the transformer note
-            if (targetSlug.includes('language-model-head') || targetSlug.includes('transformer')) {
-                setNote(SAMPLE_TRANSFORMER_NOTE)
-            }
+
+            // Compute powerful semantic / keyword relevance ranking in frontend as well
+            const clientRanked = calculateRelatedNotes(matched, allCombined, 24)
+
+            // Merge server-scored notes with client-scored notes, prioritizing server pipeline
+            const finalRelatedMap = new Map()
+            serverRelated.forEach(n => {
+                const key = n._id || n.slug || titleToSlug(n.title)
+                finalRelatedMap.set(key, n)
+            })
+
+            clientRanked.forEach(n => {
+                const key = n._id || n.slug || titleToSlug(n.title)
+                if (!finalRelatedMap.has(key)) {
+                    finalRelatedMap.set(key, n)
+                }
+            })
+
+            // Exclude current note
+            const currentKey = matched._id || matched.slug || titleToSlug(matched.title)
+            const finalRelated = Array.from(finalRelatedMap.values()).filter(n => {
+                const candidateKey = n._id || n.slug || titleToSlug(n.title)
+                return candidateKey !== currentKey
+            })
+
+            setRelatedNotes(finalRelated)
         }
 
         setLoading(false)
     }
+
+    // Pagination calculations for related notes (6 items per page)
+    const totalRelatedPages = Math.ceil(relatedNotes.length / RELATED_PER_PAGE)
+    const safeRelatedPage = Math.max(1, Math.min(relatedPage, totalRelatedPages || 1))
+    const startRelatedIndex = (safeRelatedPage - 1) * RELATED_PER_PAGE
+    const paginatedRelatedNotes = relatedNotes.slice(startRelatedIndex, startRelatedIndex + RELATED_PER_PAGE)
 
     return (
         <div className={`min-h-screen ${dark ? 'bg-black text-white' : 'bg-slate-50 text-gray-900'} pb-20 flex flex-col justify-between transition-colors duration-300 font-sans`}>
             <div>
                 <Navbar />
 
-                <main className='max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-8'>
+                <main className='max-w-4xl mx-auto w-full px-4 sm:px-6 md:px-8 pt-6 md:pt-10 pb-8 md:pb-14'>
                     {/* Top Navigation Bar */}
                     <div className='flex items-center justify-between gap-4 mb-6 flex-wrap'>
                         <Link
@@ -179,36 +225,52 @@ const NoteSingle = () => {
                             <NoteFeatured 
                                 note={note} 
                                 isLatest={false} 
-                                onDelete={() => setDeleteModalOpen(true)} 
+                                onDelete={() => {
+                                    setDeleteError(null)
+                                    setDeleteModalOpen(true)
+                                }} 
                                 onEdit={() => setEditModalOpen(true)}
                             />
 
                             {/* More Notes Grid Section */}
                             {relatedNotes.length > 0 && (
-                                <section className='pt-8 border-0 border-none'>
+                                <section className='pt-8 border-0 border-none' id="related-notes-section">
                                     <div className='flex items-center justify-between gap-4 mb-6'>
                                         <div>
                                             <h3 className={`text-xl font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>
                                                 More Deep Dive Notes
                                             </h3>
                                             <p className={`text-xs mt-0.5 ${dark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                Explore other articles, mathematical formulas and explanations
+                                                Related notes and mathematical formulas based on topic & contents
                                             </p>
                                         </div>
                                         <Link
                                             to='/notes'
                                             className='text-xs font-semibold text-blue-500 hover:text-blue-600 hover:underline flex items-center gap-1'
                                         >
-                                            View all ({relatedNotes.length + 1}) →
+                                            View all ({allNotesCount || relatedNotes.length + 1}) →
                                         </Link>
                                     </div>
 
-                                    {/* 3 to 4 Column Grid of Note Cards */}
-                                    <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5'>
-                                        {relatedNotes.map(n => (
+                                    {/* 3 Column Grid of Note Cards (6 items per page) */}
+                                    <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5'>
+                                        {paginatedRelatedNotes.map(n => (
                                             <NoteGridCard key={n._id || n.slug || n.title} note={n} />
                                         ))}
                                     </div>
+
+                                    {/* Pagination Controls after 6 items */}
+                                    {totalRelatedPages > 1 && (
+                                        <Pagination
+                                            currentPage={safeRelatedPage}
+                                            totalPages={totalRelatedPages}
+                                            onPageChange={(p) => {
+                                                setRelatedPage(p)
+                                                const el = document.getElementById('related-notes-section')
+                                                if (el) el.scrollIntoView({ behavior: 'smooth' })
+                                            }}
+                                        />
+                                    )}
                                 </section>
                             )}
                         </div>
@@ -220,9 +282,13 @@ const NoteSingle = () => {
             <DeleteNoteModal
                 isOpen={deleteModalOpen}
                 note={note}
-                onClose={() => setDeleteModalOpen(false)}
+                onClose={() => {
+                    setDeleteModalOpen(false)
+                    setDeleteError(null)
+                }}
                 onConfirm={handleConfirmDelete}
                 loading={deleting}
+                error={deleteError}
             />
 
             {/* Edit / Update Note Modal */}
