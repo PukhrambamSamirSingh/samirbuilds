@@ -10,28 +10,8 @@ const Home = () => {
     const isDark = theme === 'dark'
 
     return (
-        /* Earlier Home Page Background:
-        <div
-            className={`relative min-h-screen flex flex-col justify-between transition-colors duration-300 overflow-x-hidden ${
-                isDark ? 'bg-gray-800 text-[#ededf1]' : 'bg-slate-100 text-slate-900'
-            }`}
-        >
-        */
-        <div
-            className={`relative min-h-screen flex flex-col justify-between transition-colors duration-300 overflow-x-hidden ${
-                isDark ? 'bg-black text-white' : 'bg-slate-50 text-gray-900'
-            }`}
-        >
-            {/* Earlier Background Image Overlay (commented out to preserve for later):
-            <div
-                style={{ backgroundImage: `url(${ideaBg})` }}
-                className={`absolute inset-0 bg-cover bg-center ${
-                    isDark ? 'brightness-40 opacity-50' : 'brightness-90 opacity-70'
-                } pointer-events-none transition-all duration-300`}
-            />
-            */}
-
-            <div className="relative z-10 flex flex-col flex-1">
+        <div className={`min-h-screen ${isDark ? 'bg-black text-white' : 'bg-slate-50 text-gray-900'} flex flex-col justify-between transition-colors duration-300 font-sans`}>
+            <div>
                 <Navbar />
 
                 <main className="px-4 sm:px-6 md:px-8 lg:px-8 pt-6 md:pt-10 pb-8 md:pb-14 max-w-[1320px] mx-auto w-full flex-1 flex flex-col justify-start">
@@ -51,20 +31,6 @@ const Home = () => {
                                     Welcome to Samir Builds
                                 </span>
                             </div>
-
-                            {/* Earlier Apple-style headline kept for reference:
-                            <h1 className="type-display text-4xl sm:text-5xl lg:text-[2.6rem] xl:text-5xl font-semibold tracking-[-0.035em] leading-[1.05] mb-5 text-left">
-                                <span className={`block ${isDark ? 'type-chrome' : 'text-slate-900'}`}>
-                                    Exploring Code,
-                                </span>
-                                <span className={`block ${isDark ? 'type-chrome' : 'text-slate-900'}`}>
-                                    Design &
-                                </span>
-                                <span className="block type-soft text-[#c4c4cc] mt-1 sm:mt-2 text-[1.05em]">
-                                    Future Innovations.
-                                </span>
-                            </h1>
-                            */}
 
                             {/* Main Headline - Fresh Modern Tech Layout */}
                             <h1 className="text-4xl sm:text-5xl lg:text-[2.75rem] xl:text-[3.15rem] font-black tracking-tight leading-[1.06] mb-5 text-left">
@@ -126,4 +92,3 @@ const Home = () => {
 }
 
 export default Home
-

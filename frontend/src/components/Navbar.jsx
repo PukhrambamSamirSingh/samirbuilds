@@ -87,10 +87,10 @@ const Navbar = () => {
 
     return (
         <>
-            <header className={`sticky top-0 z-50 w-full py-4 sm:py-5 md:py-6 transition-colors duration-200 border-0 border-none ${
+            <header className={`sticky top-0 z-50 w-full py-4 sm:py-5 md:py-6 transition-all duration-200 ${
                 isDark
-                    ? scrolled ? 'bg-black/95 text-white backdrop-blur-md shadow-md' : 'bg-black/90 text-white backdrop-blur-md'
-                    : scrolled ? 'bg-white/95 text-slate-900 backdrop-blur-md shadow-xs' : 'bg-white/90 text-slate-900 backdrop-blur-md'
+                    ? scrolled ? 'bg-black/80 text-white backdrop-blur-md shadow-md border-b border-white/10' : 'bg-black/95 text-white backdrop-blur-md border-b border-transparent'
+                    : scrolled ? 'bg-white/80 text-slate-900 backdrop-blur-md shadow-xs border-b border-slate-200/60' : 'bg-white/95 text-slate-900 backdrop-blur-md border-b border-transparent'
             }`}>
                 <nav className="mx-auto flex max-w-[1400px] items-center justify-between px-4 sm:px-6 lg:px-8">
                     {/* Left: Brand */}
