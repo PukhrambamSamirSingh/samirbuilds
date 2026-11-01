@@ -5,8 +5,14 @@ const ThemeContext = createContext()
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
     try {
-      const saved = localStorage.getItem('theme')
-      return saved === 'light' ? 'light' : 'dark'
+      const userSet = localStorage.getItem('theme_user_set')
+      if (userSet === 'true') {
+        const saved = localStorage.getItem('theme')
+        return saved === 'light' ? 'light' : 'dark'
+      }
+      // Default to dark for all visitors and clear legacy light default
+      localStorage.setItem('theme', 'dark')
+      return 'dark'
     } catch {
       return 'dark'
     }
@@ -27,6 +33,7 @@ export const ThemeProvider = ({ children }) => {
         document.body.classList.add('dark')
         document.body.classList.remove('light')
         document.body.style.backgroundColor = '#000000'
+        document.body.style.color = '#ffffff'
       }
     } else {
       document.documentElement.classList.remove('dark')
@@ -38,12 +45,20 @@ export const ThemeProvider = ({ children }) => {
         document.body.classList.remove('dark')
         document.body.classList.add('light')
         document.body.style.backgroundColor = '#f8fafc'
+        document.body.style.color = '#0f172a'
       }
     }
   }, [theme])
 
   const toggleTheme = () => {
-    setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'))
+    setTheme(prevTheme => {
+      const nextTheme = prevTheme === 'dark' ? 'light' : 'dark'
+      try {
+        localStorage.setItem('theme', nextTheme)
+        localStorage.setItem('theme_user_set', 'true')
+      } catch (e) {}
+      return nextTheme
+    })
   }
 
   return (
