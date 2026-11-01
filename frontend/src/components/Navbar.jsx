@@ -111,7 +111,7 @@ const Navbar = () => {
                                 key={link.name}
                                 to={link.path}
                                 className={({ isActive }) =>
-                                    `text-base lg:text-[17px] font-semibold transition-colors duration-150 py-1 tracking-[-0.01em] ${
+                                    `text-xs sm:text-[13px] md:text-sm font-medium transition-colors duration-150 py-1 ${
                                         isActive
                                             ? isDark
                                                 ? 'text-white border-b-2 border-white'
@@ -280,7 +280,7 @@ const Navbar = () => {
                                     to={link.path}
                                     onClick={() => setMobileMenuOpen(false)}
                                     className={({ isActive }) =>
-                                        `flex items-center px-4 py-3 rounded-md text-base font-medium transition-all duration-200 ${
+                                        `flex items-center px-3.5 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
                                             isActive
                                                 ? isDark
                                                     ? 'bg-white text-black font-semibold shadow-sm'
