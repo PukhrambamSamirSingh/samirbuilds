@@ -232,18 +232,18 @@ body:not(.dark) .btn-ghost:hover {
   background-color: currentColor !important;
 }
 
-/* Keep font size of exponents and lower words (subscripts) refined, small, and crisp */
+/* Keep font size of exponents and lower words (subscripts) the exact same smaller size */
 .katex .msupsub {
   text-align: left;
 }
 
 .katex .msupsub .katex-sizing {
-  font-size: 0.63em !important;
+  font-size: 0.74em !important;
 }
 
 .katex .msupsub .mord.text,
 .katex .msupsub .text {
-  font-size: 1em !important;
+  font-size: 0.74em !important;
 }
 
 .katex .msupsub .mord.text .mord,
@@ -253,37 +253,31 @@ body:not(.dark) .btn-ghost:hover {
   letter-spacing: 0.01em !important;
 }
 
-/* Plain HTML sub and sup styling in notes and blogs */
-sub,
-.prose-container sub {
-  font-size: 0.63em !important;
-  vertical-align: baseline !important;
-  position: relative !important;
-  bottom: -0.28em !important;
-  line-height: 0 !important;
+/* Plain HTML sub and sup styling to match */
+sub {
+  font-size: 0.74em;
+  vertical-align: -0.22em;
+  line-height: 0;
 }
 
-sup,
-.prose-container sup {
-  font-size: 0.63em !important;
-  vertical-align: baseline !important;
-  position: relative !important;
-  top: -0.45em !important;
-  line-height: 0 !important;
+sup {
+  font-size: 0.74em;
+  vertical-align: 0.32em;
+  line-height: 0;
 }
 
-/* Exponents (superscripts) kept high up */
+/* Exponents (superscripts) go a little higher up */
 .katex .msupsub > .vlist-t:not(.vlist-t2) {
-  transform: translateY(-0.36em) !important;
+  transform: translateY(-0.22em) !important;
 }
 
 .katex .msupsub > .vlist-t.vlist-t2 > .vlist-r:first-child .vlist > span:nth-child(2) {
-  transform: translateY(-0.36em) !important;
+  transform: translateY(-0.22em) !important;
 }
 
-/* Subscripts (lower words like "vocab" in W_vocab or numbers in x_1) placed clearly down below the words */
+/* Subscripts (lower word like "vocab" in W_vocab) appear noticeably lower */
 .katex .msupsub > .vlist-t.vlist-t2 > .vlist-r:first-child .vlist > span:first-child {
-  transform: translateY(0.32em) !important;
+  transform: translateY(0.14em) !important;
 }
 
 .katex-display {
