@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './apiConfig'
 /**
  * Authentication and Note/Blog Ownership Helpers
  */
@@ -135,7 +136,7 @@ export const deleteNoteApi = async (note) => {
 
     // 2. Attempt backend server delete
     try {
-        const res = await fetch(`http://127.0.0.1:8000/note/delete/${encodeURIComponent(noteId)}`, {
+        const res = await fetch(`${API_BASE_URL}/note/delete/${encodeURIComponent(noteId)}`, {
             method: 'DELETE',
             headers: getAdminHeaders()
         })
@@ -255,7 +256,7 @@ export const deleteBlogApi = async (blog) => {
 
     // 2. Attempt backend server delete
     try {
-        const res = await fetch(`http://127.0.0.1:8000/blog/delete/${encodeURIComponent(blogId)}`, {
+        const res = await fetch(`${API_BASE_URL}/blog/delete/${encodeURIComponent(blogId)}`, {
             method: 'DELETE',
             headers: getAdminHeaders()
         })
@@ -374,7 +375,7 @@ export const adminLoginApi = async ({ email, password, secret_key }) => {
     if (password) payload.password = password
     if (secret_key) payload.secret_key = secret_key
 
-    const res = await fetch('http://127.0.0.1:8000/admin/login', {
+    const res = await fetch(`${API_BASE_URL}/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -401,7 +402,7 @@ export const adminLoginApi = async ({ email, password, secret_key }) => {
 }
 
 export const verifyAdminSecretApi = async (secret_key) => {
-    const res = await fetch('http://127.0.0.1:8000/admin/verify-secret', {
+    const res = await fetch(`${API_BASE_URL}/admin/verify-secret`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ secret_key })
@@ -427,7 +428,7 @@ export const maskSecretKey = (key) => {
 }
 
 export const getAdminSettingsApi = async () => {
-    const res = await fetch('http://127.0.0.1:8000/admin/settings', {
+    const res = await fetch(`${API_BASE_URL}/admin/settings`, {
         headers: getAdminHeaders()
     })
     const data = await res.json()
@@ -438,7 +439,7 @@ export const getAdminSettingsApi = async () => {
 }
 
 export const updateAdminSecretKeyApi = async (current_secret_key, new_secret_key) => {
-    const res = await fetch('http://127.0.0.1:8000/admin/settings/secret-key', {
+    const res = await fetch(`${API_BASE_URL}/admin/settings/secret-key`, {
         method: 'PUT',
         headers: getAdminHeaders(),
         body: JSON.stringify({ current_secret_key, new_secret_key })
@@ -452,7 +453,7 @@ export const updateAdminSecretKeyApi = async (current_secret_key, new_secret_key
 }
 
 export const getAdminStatsApi = async () => {
-    const res = await fetch('http://127.0.0.1:8000/admin/stats', {
+    const res = await fetch(`${API_BASE_URL}/admin/stats`, {
         headers: getAdminHeaders()
     })
     const data = await res.json()

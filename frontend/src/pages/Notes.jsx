@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../utils/apiConfig'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
@@ -69,7 +70,7 @@ const Notes = () => {
 
         // 2. Fetch server notes
         try {
-            const res = await fetch('http://127.0.0.1:8000/notes')
+            const res = await fetch(`${API_BASE_URL}/notes`)
             if (res.ok) {
                 const data = await res.json()
                 if (Array.isArray(data)) {

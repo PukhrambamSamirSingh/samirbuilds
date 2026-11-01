@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../utils/apiConfig'
 import React, { useEffect, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { useLocation, Link, useNavigate } from 'react-router-dom'
@@ -37,7 +38,7 @@ const Blog = () => {
 
         // 1. Try fetching from backend API
         try {
-            const url = `http://127.0.0.1:8000/blogs/${targetSlug}`
+            const url = `${API_BASE_URL}/blogs/${targetSlug}`
             const res = await fetch(url)
             if (res.ok) {
                 const result = await res.json()

@@ -7,6 +7,7 @@ import { cleanAndFormatChatGPTText } from '../utils/markdownUtils'
 import { useTheme } from '../context/ThemeContext'
 import { FiCopy, FiCheck } from 'react-icons/fi'
 import MermaidDiagram from './MermaidDiagram'
+import { API_BASE_URL } from '../utils/apiConfig'
 
 /**
  * Enhanced CodeBlock component with copy functionality & Mermaid diagram support
@@ -232,10 +233,8 @@ export default function MarkdownRenderer({ content, className = '' }) {
                     img: ({ src, alt, ...props }) => {
                         const handleImgError = (e) => {
                             const currentSrc = e.target.src || ''
-                            if (currentSrc.includes('127.0.0.1:8000')) {
-                                e.target.src = currentSrc.replace('127.0.0.1:8000', 'localhost:8000')
-                            } else if (currentSrc.includes('localhost:8000')) {
-                                e.target.src = currentSrc.replace('localhost:8000', '127.0.0.1:8000')
+                            if (currentSrc.includes('127.0.0.1:8000') || currentSrc.includes('localhost:8000')) {
+                                e.target.src = currentSrc.replace(/https?:\/\/(?:127\.0\.0\.1|localhost):8000/, API_BASE_URL)
                             }
                         }
 

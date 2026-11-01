@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../utils/apiConfig'
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MdClose } from 'react-icons/md'
@@ -182,7 +183,7 @@ const AddBlog = ({ openAdd, setOpenAdd, onBlogAdded, blogToEdit = null, onBlogUp
             }
 
             try {
-                const res = await fetch(`http://127.0.0.1:8000/blog/update/${blogId}`, {
+                const res = await fetch(`${API_BASE_URL}/blog/update/${blogId}`, {
                     method: 'PUT',
                     headers: getAdminHeaders(),
                     body: JSON.stringify(updatePayload)
@@ -223,7 +224,7 @@ const AddBlog = ({ openAdd, setOpenAdd, onBlogAdded, blogToEdit = null, onBlogUp
         }
 
         try {
-            const res = await fetch('http://127.0.0.1:8000/blog/create', {
+            const res = await fetch(`${API_BASE_URL}/blog/create`, {
                 method: 'POST',
                 headers: getAdminHeaders(),
                 body: JSON.stringify(newBlog)

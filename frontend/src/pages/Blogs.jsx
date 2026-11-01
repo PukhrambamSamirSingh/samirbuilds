@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../utils/apiConfig'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import BlogSingle from '../components/BlogSingle'
@@ -41,7 +42,7 @@ const Blogs = () => {
 
         // 2. Fetch server blogs
         try {
-            const res = await fetch('http://127.0.0.1:8000/blogs')
+            const res = await fetch(`${API_BASE_URL}/blogs`)
             if (res.ok) {
                 const result = await res.json()
                 if (Array.isArray(result)) {

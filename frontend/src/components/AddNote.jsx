@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../utils/apiConfig'
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
@@ -288,7 +289,7 @@ const AddNote = ({ setOpenAdd, onNoteAdded, noteToEdit = null, onNoteUpdated = n
             }
 
             try {
-                const res = await fetch(`http://127.0.0.1:8000/note/update/${noteId}`, {
+                const res = await fetch(`${API_BASE_URL}/note/update/${noteId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -323,7 +324,7 @@ const AddNote = ({ setOpenAdd, onNoteAdded, noteToEdit = null, onNoteUpdated = n
 
         try {
             // Try server API first if token exists
-            const res = await fetch('http://127.0.0.1:8000/note/create', {
+            const res = await fetch(`${API_BASE_URL}/note/create`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

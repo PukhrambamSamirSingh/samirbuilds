@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../utils/apiConfig'
 import React, { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
@@ -77,7 +78,7 @@ const NoteSingle = () => {
 
         // 2. Try fetching from backend API
         try {
-            const res = await fetch(`http://127.0.0.1:8000/notes/${targetSlug}`)
+            const res = await fetch(`${API_BASE_URL}/notes/${targetSlug}`)
             if (res.ok) {
                 const data = await res.json()
                 if (data && data.title) {
@@ -91,7 +92,7 @@ const NoteSingle = () => {
         // 3. Try fetching related notes from backend MongoDB pipeline / vector scoring endpoint
         let serverRelated = []
         try {
-            const resRelated = await fetch(`http://127.0.0.1:8000/notes/${targetSlug}/related?limit=24`)
+            const resRelated = await fetch(`${API_BASE_URL}/notes/${targetSlug}/related?limit=24`)
             if (resRelated.ok) {
                 const relatedData = await resRelated.json()
                 if (Array.isArray(relatedData) && relatedData.length > 0) {
@@ -104,7 +105,7 @@ const NoteSingle = () => {
 
         // Also fetch all notes to populate candidate pool
         try {
-            const resAll = await fetch('http://127.0.0.1:8000/notes')
+            const resAll = await fetch(`${API_BASE_URL}/notes`)
             if (resAll.ok) {
                 const allData = await resAll.json()
                 if (Array.isArray(allData)) {

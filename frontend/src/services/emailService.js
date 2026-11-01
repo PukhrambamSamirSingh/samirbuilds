@@ -3,7 +3,7 @@
  * Communicates with backend endpoints utilizing Resend for secure email dispatch.
  */
 
-const API_BASE_URL = 'http://127.0.0.1:8000'
+import { API_BASE_URL } from '../utils/apiConfig'
 
 /**
  * Initiates registration and dispatches 6-digit verification code via Resend

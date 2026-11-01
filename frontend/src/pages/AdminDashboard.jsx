@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../utils/apiConfig'
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
@@ -139,7 +140,7 @@ const AdminDashboard = () => {
 
             let remoteBlogs = []
             try {
-                const res = await fetch('http://127.0.0.1:8000/blogs')
+                const res = await fetch(`${API_BASE_URL}/blogs`)
                 if (res.ok) remoteBlogs = await res.json()
             } catch (e) {}
 
@@ -157,7 +158,7 @@ const AdminDashboard = () => {
 
             let remoteNotes = []
             try {
-                const res = await fetch('http://127.0.0.1:8000/notes')
+                const res = await fetch(`${API_BASE_URL}/notes`)
                 if (res.ok) remoteNotes = await res.json()
             } catch (e) {}
 

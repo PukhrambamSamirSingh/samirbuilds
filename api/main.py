@@ -41,17 +41,23 @@ from services.cloudinary_service import upload_to_cloudinary
 app = FastAPI(title="Samir Builds API")
 samirbuilds = app
 
+env_origins = os.getenv("ALLOWED_ORIGINS") or os.getenv("FRONTEND_URL")
 origins = [
     "http://localhost:5173",
-    "http://127.0.0.1:5173"
+    "http://127.0.0.1:5173",
+    "https://samirbuilds-059f.onrender.com",
+    "https://samirbuilds.onrender.com",
 ]
+if env_origins:
+    origins.extend([o.strip() for o in env_origins.split(",") if o.strip()])
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 # Static file serving for fallback local files

@@ -5,8 +5,10 @@
  * All uploads stream through the FastAPI backend proxy to prevent exposing credentials to the browser.
  */
 
+import { API_BASE_URL } from '../utils/apiConfig'
+
 const getApiBase = () => {
-    return window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'http://127.0.0.1:8000'
+    return API_BASE_URL
 }
 
 /**
