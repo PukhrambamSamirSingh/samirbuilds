@@ -47,6 +47,8 @@ origins = [
     "http://127.0.0.1:5173",
     "https://samirbuilds-059f.onrender.com",
     "https://samirbuilds.onrender.com",
+    "https://samirbuilds.in",
+    "https://www.samirbuilds.in",
 ]
 if env_origins:
     origins.extend([o.strip() for o in env_origins.split(",") if o.strip()])
@@ -54,7 +56,7 @@ if env_origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r"https://.*\.onrender\.com",
+    allow_origin_regex=r"https://(.*\.)?(onrender\.com|samirbuilds\.in)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
