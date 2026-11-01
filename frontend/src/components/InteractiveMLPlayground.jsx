@@ -2181,7 +2181,7 @@ function NetworkDiagram({ input1, input2, hidden1, hidden2, output }) {
       })}
       {nodes.map((n) => (
         <g key={n.label}>
-          <circle cx={n.x} cy={n.y} r="24" className={`mlp-neuron ${n.type}`} />
+          <circle cx={n.x} cy={n.y} r="24" className={`mlp-neuron mlp-neuron-${n.type}`} />
           <text x={n.x} y={n.y - 3} textAnchor="middle" className="mlp-neuron-label">{n.label}</text>
           <text x={n.x} y={n.y + 11} textAnchor="middle" className="mlp-neuron-value">{n.value.toFixed(2)}</text>
         </g>

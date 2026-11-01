@@ -8,13 +8,13 @@ export const ThemeProvider = ({ children }) => {
       const userSet = localStorage.getItem('theme_user_set')
       if (userSet === 'true') {
         const saved = localStorage.getItem('theme')
-        return saved === 'light' ? 'light' : 'dark'
+        return saved === 'dark' ? 'dark' : 'light'
       }
-      // Default to dark for all visitors and clear legacy light default
-      localStorage.setItem('theme', 'dark')
-      return 'dark'
+      // Default to light for all visitors
+      localStorage.setItem('theme', 'light')
+      return 'light'
     } catch {
-      return 'dark'
+      return 'light'
     }
   })
 

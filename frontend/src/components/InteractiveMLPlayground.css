@@ -99,9 +99,9 @@
 .mlp-network-svg { display: block; width: 100%; max-width: 460px; height: auto; margin: 0 auto 12px; overflow: visible; }
 .mlp-network-link { stroke: rgba(167,243,194,.35); }
 .mlp-neuron { stroke-width: 1.5; }
-.mlp-neuron.input { fill: #18261f; stroke: #a7f3c2; }
-.mlp-neuron.hidden { fill: #201c34; stroke: #b6a4ff; }
-.mlp-neuron.output { fill: #25303a; stroke: #d8e1ed; }
+.mlp-neuron.mlp-neuron-input, .mlp-neuron.input { fill: #18261f; stroke: #a7f3c2; }
+.mlp-neuron.mlp-neuron-hidden, .mlp-neuron.hidden { fill: #201c34; stroke: #b6a4ff; display: inline !important; }
+.mlp-neuron.mlp-neuron-output, .mlp-neuron.output { fill: #25303a; stroke: #d8e1ed; }
 .mlp-neuron-label { fill: #f3f5fa; font-size: 10px; font-weight: 700; }
 .mlp-neuron-value { fill: #b9c4d2; font-size: 8px; }
 .mlp-layer-label { fill: #7f8b9b; font-size: 8.5px; letter-spacing: 1px; }
@@ -482,7 +482,10 @@
   --mlp-card: #f8fafc;
   --mlp-border: rgba(15, 23, 42, 0.12);
   --mlp-text: #0f172a;
-  --mlp-muted: #64748b;
+  --mlp-muted: #475569;
+  --mlp-green: #047857;
+  --mlp-purple: #7c3aed;
+  --mlp-red: #dc2626;
   color: #0f172a;
 }
 
@@ -518,4 +521,434 @@
   border-color: rgba(2, 132, 199, 0.25);
 }
 
+/* Light Mode Inputs, Sliders, Badges and Controls */
+.light .mlp-controls,
+[data-theme='light'] .mlp-controls {
+  background: rgba(248, 250, 252, 0.85);
+  border-color: rgba(15, 23, 42, 0.1);
+}
 
+.light .mlp-content,
+[data-theme='light'] .mlp-content {
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+.light .mlp-section-label,
+[data-theme='light'] .mlp-section-label {
+  color: #334155 !important;
+  font-weight: 800;
+}
+
+.light .mlp-range-field > span,
+[data-theme='light'] .mlp-range-field > span {
+  color: #0f172a !important;
+  font-weight: 700;
+}
+
+.light .mlp-range-field > span strong,
+[data-theme='light'] .mlp-range-field > span strong {
+  color: #065f46 !important;
+  background: #d1fae5 !important;
+  border: 1px solid #a7f3d0 !important;
+  font-weight: 800;
+}
+
+.light .mlp-range-field > small,
+[data-theme='light'] .mlp-range-field > small {
+  color: #475569 !important;
+  font-weight: 600;
+}
+
+.light .mlp-range-field input,
+[data-theme='light'] .mlp-range-field input {
+  accent-color: #059669;
+}
+
+/* Light Mode Neural Network SVG Diagram */
+.light .mlp-network-svg,
+[data-theme='light'] .mlp-network-svg {
+  background: transparent;
+}
+
+.light .mlp-network-link,
+[data-theme='light'] .mlp-network-link {
+  stroke: #64748b;
+  stroke-opacity: 0.75;
+}
+
+.light .mlp-neuron,
+[data-theme='light'] .mlp-neuron {
+  display: inline !important;
+  stroke-width: 2.2;
+}
+
+.light .mlp-neuron.mlp-neuron-input,
+[data-theme='light'] .mlp-neuron.mlp-neuron-input {
+  fill: #065f46 !important;
+  stroke: #059669 !important;
+}
+
+.light .mlp-neuron.mlp-neuron-hidden,
+[data-theme='light'] .mlp-neuron.mlp-neuron-hidden {
+  fill: #5b21b6 !important;
+  stroke: #7c3aed !important;
+  display: inline !important;
+}
+
+.light .mlp-neuron.mlp-neuron-output,
+[data-theme='light'] .mlp-neuron.mlp-neuron-output {
+  fill: #0c4a6e !important;
+  stroke: #0284c7 !important;
+}
+
+.light .mlp-neuron-label,
+[data-theme='light'] .mlp-neuron-label {
+  fill: #ffffff !important;
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.light .mlp-neuron-value,
+[data-theme='light'] .mlp-neuron-value {
+  fill: #f1f5f9 !important;
+  font-weight: 700;
+  font-size: 9px;
+}
+
+.light .mlp-layer-label,
+[data-theme='light'] .mlp-layer-label {
+  fill: #334155 !important;
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+}
+
+/* Light Mode Formula Cards & Metrics */
+.light .mlp-formula-card,
+[data-theme='light'] .mlp-formula-card {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.light .mlp-formula-card small,
+[data-theme='light'] .mlp-formula-card small {
+  color: #334155 !important;
+  font-weight: 800;
+}
+
+.light .mlp-formula-card code,
+[data-theme='light'] .mlp-formula-card code {
+  color: #0f172a !important;
+  font-weight: 600;
+}
+
+.light .mlp-formula-card > strong,
+[data-theme='light'] .mlp-formula-card > strong {
+  color: #047857 !important;
+  font-weight: 800;
+}
+
+.light .mlp-formula-highlight,
+[data-theme='light'] .mlp-formula-highlight {
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+}
+
+.light .mlp-formula-highlight small,
+[data-theme='light'] .mlp-formula-highlight small {
+  color: #6d28d9 !important;
+}
+
+.light .mlp-formula-highlight > strong,
+[data-theme='light'] .mlp-formula-highlight > strong {
+  color: #6d28d9 !important;
+}
+
+.light .mlp-explanation,
+[data-theme='light'] .mlp-explanation {
+  color: #334155 !important;
+  font-weight: 500;
+}
+
+/* Light Mode Descent Stats */
+.light .mlp-stat,
+[data-theme='light'] .mlp-stat {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+.light .mlp-stat small,
+[data-theme='light'] .mlp-stat small {
+  color: #475569;
+  font-weight: 700;
+}
+
+.light .mlp-stat strong,
+[data-theme='light'] .mlp-stat strong {
+  color: #0f172a;
+}
+
+.light .mlp-stat .positive,
+[data-theme='light'] .mlp-stat .positive {
+  color: #047857;
+}
+
+.light .mlp-stat .negative,
+[data-theme='light'] .mlp-stat .negative {
+  color: #dc2626;
+}
+
+.light .mlp-equation,
+[data-theme='light'] .mlp-equation {
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+  color: #6d28d9;
+}
+
+.light .mlp-track-line,
+[data-theme='light'] .mlp-track-line {
+  background: #cbd5e1;
+}
+
+.light .mlp-target-marker,
+[data-theme='light'] .mlp-target-marker {
+  background: #0f172a;
+}
+
+.light .mlp-target-marker span,
+.light .mlp-theta-marker span,
+.light .mlp-next-marker span,
+[data-theme='light'] .mlp-target-marker span,
+[data-theme='light'] .mlp-theta-marker span,
+[data-theme='light'] .mlp-next-marker span {
+  color: #334155;
+  font-weight: 700;
+}
+
+/* Light Mode Backprop Nodes */
+.light .mlp-node,
+[data-theme='light'] .mlp-node {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.light .mlp-node small,
+[data-theme='light'] .mlp-node small {
+  color: #334155;
+  font-weight: 800;
+}
+
+.light .mlp-node strong,
+[data-theme='light'] .mlp-node strong {
+  color: #0f172a;
+}
+
+.light .mlp-node b,
+[data-theme='light'] .mlp-node b {
+  color: #047857;
+}
+
+.light .mlp-node em,
+[data-theme='light'] .mlp-node em {
+  color: #6d28d9;
+}
+
+.light .mlp-node-main,
+[data-theme='light'] .mlp-node-main {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+.light .mlp-connector,
+[data-theme='light'] .mlp-connector {
+  color: #047857;
+}
+
+.light .mlp-direction-key,
+[data-theme='light'] .mlp-direction-key {
+  color: #334155;
+}
+
+/* Light Mode Attention Matrix */
+.light .mlp-token-choice,
+[data-theme='light'] .mlp-token-choice {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.light .mlp-token-choice.selected,
+[data-theme='light'] .mlp-token-choice.selected {
+  background: #ecfdf5;
+  border-color: #059669;
+  color: #047857;
+}
+
+.light .mlp-token-choice small,
+[data-theme='light'] .mlp-token-choice small {
+  color: #475569;
+}
+
+.light .mlp-matrix-title,
+[data-theme='light'] .mlp-matrix-title {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.light .mlp-matrix-label,
+[data-theme='light'] .mlp-matrix-label {
+  color: #334155;
+  font-weight: 600;
+}
+
+.light .matrix-open,
+[data-theme='light'] .matrix-open {
+  color: #065f46;
+  background: #d1fae5;
+  font-weight: 700;
+}
+
+.light .matrix-blocked,
+[data-theme='light'] .matrix-blocked {
+  color: #991b1b;
+  background: #fee2e2;
+  font-weight: 700;
+}
+
+.light .matrix-current-row,
+[data-theme='light'] .matrix-current-row {
+  outline: 1.5px solid #0284c7;
+  outline-offset: 1px;
+}
+
+.light .mlp-matrix-legend,
+[data-theme='light'] .mlp-matrix-legend {
+  color: #475569;
+  font-weight: 500;
+}
+
+/* Light Mode Video Player Simulation */
+.light .mlp-video-card,
+[data-theme='light'] .mlp-video-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+}
+
+.light .mlp-video-topbar,
+[data-theme='light'] .mlp-video-topbar {
+  background: #f8fafc;
+  border-bottom-color: #e2e8f0;
+}
+
+.light .mlp-video-pill,
+[data-theme='light'] .mlp-video-pill {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.light .mlp-video-controls-bar,
+[data-theme='light'] .mlp-video-controls-bar {
+  background: #f8fafc;
+  border-top-color: #e2e8f0;
+}
+
+.light .mlp-video-timestamp,
+[data-theme='light'] .mlp-video-timestamp {
+  color: #334155;
+  font-weight: 600;
+}
+
+.light .mlp-video-speed,
+[data-theme='light'] .mlp-video-speed {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.light .mlp-video-info-strip,
+[data-theme='light'] .mlp-video-info-strip {
+  background: #f1f5f9;
+  border-top-color: #e2e8f0;
+}
+
+.light .mlp-phase-badge,
+[data-theme='light'] .mlp-phase-badge {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.light .mlp-phase-tag,
+[data-theme='light'] .mlp-phase-tag {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.light .mlp-btn-play,
+[data-theme='light'] .mlp-btn-play {
+  background: #059669;
+  color: #ffffff;
+}
+
+.light .mlp-btn-restart,
+[data-theme='light'] .mlp-btn-restart {
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.light .mlp-btn-restart:hover,
+[data-theme='light'] .mlp-btn-restart:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.light .mlp-side-arrow,
+[data-theme='light'] .mlp-side-arrow {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.light .mlp-side-arrow:hover:not(:disabled),
+[data-theme='light'] .mlp-side-arrow:hover:not(:disabled) {
+  background: #059669;
+  color: #ffffff;
+  border-color: #059669;
+}
+
+.light .mlp-footer,
+[data-theme='light'] .mlp-footer {
+  border-top-color: rgba(15, 23, 42, 0.08);
+}
+
+.light .mlp-footer > span,
+[data-theme='light'] .mlp-footer > span {
+  color: #475569;
+}
+
+.light .mlp-text-button,
+[data-theme='light'] .mlp-text-button {
+  color: #475569;
+}
+
+.light .mlp-text-button:hover,
+[data-theme='light'] .mlp-text-button:hover {
+  color: #0f172a;
+}
+
+.light .mlp-next-button,
+[data-theme='light'] .mlp-next-button {
+  background: #059669;
+  color: #ffffff;
+  border-color: #047857;
+}
+
+.light .mlp-disclaimer,
+[data-theme='light'] .mlp-disclaimer {
+  color: #475569;
+}

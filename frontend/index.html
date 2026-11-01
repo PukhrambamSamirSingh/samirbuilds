@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark" data-theme="dark" style="background-color: #000000; color-scheme: dark;">
+<html lang="en" class="light" data-theme="light" style="background-color: #f8fafc; color-scheme: light;">
 
 <head>
   <meta charset="UTF-8" />
@@ -10,25 +10,25 @@
     (function () {
       try {
         var userSet = localStorage.getItem('theme_user_set');
-        var theme = (userSet === 'true') ? localStorage.getItem('theme') : 'dark';
+        var theme = (userSet === 'true') ? localStorage.getItem('theme') : 'light';
         if (!userSet) {
-          localStorage.setItem('theme', 'dark');
+          localStorage.setItem('theme', 'light');
         }
-        if (theme === 'light') {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.classList.add('light');
-          document.documentElement.setAttribute('data-theme', 'light');
-          document.documentElement.style.backgroundColor = '#f8fafc';
-          document.documentElement.style.colorScheme = 'light';
-        } else {
+        if (theme === 'dark') {
           document.documentElement.classList.add('dark');
           document.documentElement.classList.remove('light');
           document.documentElement.setAttribute('data-theme', 'dark');
           document.documentElement.style.backgroundColor = '#000000';
           document.documentElement.style.colorScheme = 'dark';
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+          document.documentElement.setAttribute('data-theme', 'light');
+          document.documentElement.style.backgroundColor = '#f8fafc';
+          document.documentElement.style.colorScheme = 'light';
         }
       } catch (e) {
-        document.documentElement.classList.add('dark');
+        document.documentElement.classList.add('light');
       }
     })();
   </script>
@@ -39,7 +39,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 </head>
 
-<body class="dark" style="background-color: #000000; color: #ffffff;">
+<body class="light" style="background-color: #f8fafc; color: #0f172a;">
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
 </body>
