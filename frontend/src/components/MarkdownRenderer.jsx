@@ -230,6 +230,18 @@ export default function MarkdownRenderer({ content, className = '' }) {
                         </strong>
                     ),
 
+                    sub: ({ children }) => (
+                        <sub className="text-[0.63em] leading-none align-baseline relative -bottom-[0.28em] font-normal">
+                            {children}
+                        </sub>
+                    ),
+
+                    sup: ({ children }) => (
+                        <sup className="text-[0.63em] leading-none align-baseline relative -top-[0.45em] font-normal">
+                            {children}
+                        </sup>
+                    ),
+
                     img: ({ src, alt, ...props }) => {
                         const handleImgError = (e) => {
                             const currentSrc = e.target.src || ''
