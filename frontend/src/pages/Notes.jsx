@@ -171,12 +171,12 @@ const Notes = () => {
                                 🔍
                             </div>
                             <h3 className='text-lg font-bold text-gray-900 dark:text-white'>
-                                No matching notes found
+                                {searchQuery ? 'No matching notes found' : 'No Notes Yet'}
                             </h3>
                             <p className='text-xs sm:text-sm max-w-md'>
                                 {searchQuery 
                                     ? `No notes matched query "${searchQuery}".` 
-                                    : 'Start capturing what you learn every day.'}
+                                    : 'Will publish soon!'}
                             </p>
                             <div className='flex gap-3 mt-4 flex-wrap justify-center'>
                                 {searchQuery && (

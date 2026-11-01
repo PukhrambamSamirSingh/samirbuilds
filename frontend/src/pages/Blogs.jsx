@@ -165,12 +165,12 @@ const Blogs = () => {
                                 📝
                             </div>
                             <h3 className='text-lg font-bold text-gray-900 dark:text-white'>
-                                No matching articles found
+                                {searchQuery ? 'No matching articles found' : 'No Blogs Yet'}
                             </h3>
                             <p className='text-xs sm:text-sm max-w-md'>
                                 {searchQuery 
                                     ? `No articles matched query "${searchQuery}".` 
-                                    : 'Be the first to publish a technical blog article!'}
+                                    : 'Will publish soon!'}
                             </p>
                             <div className='flex gap-3 mt-4 flex-wrap justify-center'>
                                 {searchQuery && (
