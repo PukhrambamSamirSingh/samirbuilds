@@ -38,7 +38,7 @@ const Home = () => {
                                     Exploring Code,
                                 </span>
                                 <span className={`block ${isDark ? 'text-white' : 'text-slate-950'}`}>
-                                    Design &
+                                    Math, Design &
                                 </span>
                                 <span className="block mt-1 bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 bg-clip-text text-transparent">
                                     Future Innovations.
