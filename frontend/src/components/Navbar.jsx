@@ -89,29 +89,29 @@ const Navbar = () => {
         <>
             <header className={`sticky top-0 z-50 w-full py-4 sm:py-5 md:py-6 transition-all duration-200 ${
                 isDark
-                    ? scrolled ? 'bg-black/80 text-white backdrop-blur-md shadow-md border-b border-white/10' : 'bg-black/95 text-white backdrop-blur-md border-b border-transparent'
-                    : scrolled ? 'bg-white/80 text-slate-900 backdrop-blur-md shadow-xs border-b border-slate-200/60' : 'bg-white/95 text-slate-900 backdrop-blur-md border-b border-transparent'
+                    ? scrolled ? 'bg-black/80 text-white backdrop-blur-md shadow-md border-b border-white/10' : 'bg-black text-white border-b border-transparent'
+                    : scrolled ? 'bg-slate-50/80 text-gray-900 backdrop-blur-md shadow-xs border-b border-slate-200/60' : 'bg-slate-50 text-gray-900 border-b border-transparent'
             }`}>
-                <nav className="mx-auto flex max-w-[1400px] items-center justify-between px-4 sm:px-6 lg:px-8">
+                <nav className="mx-auto flex max-w-[1320px] w-full items-center justify-between px-4 sm:px-6 md:px-8 lg:px-8">
                     {/* Left: Brand */}
                     <Link to="/" className="flex items-center group select-none py-1" aria-label="Samir Builds Home">
                         <img
                             src={logo}
                             alt="Samir Builds Logo"
-                            className={`h-8 sm:h-9 md:h-10 w-auto object-contain group-hover:opacity-90 transition-opacity ${
+                            className={`h-7.5 sm:h-8 md:h-8.5 w-auto object-contain group-hover:opacity-90 transition-opacity ${
                                 isDark ? 'brightness-110 drop-shadow-[0_0_10px_rgba(255,255,255,0.18)]' : ''
                             }`}
                         />
                     </Link>
 
-                    {/* Center: Normal Format Navigation Links */}
-                    <div className="hidden md:flex items-center gap-7 lg:gap-9">
+                    {/* Center: Compact Navigation Links for Desktop */}
+                    <div className="hidden md:flex items-center gap-5 lg:gap-6.5">
                         {navLinks.map((link) => (
                             <NavLink
                                 key={link.name}
                                 to={link.path}
                                 className={({ isActive }) =>
-                                    `text-xs sm:text-[13px] md:text-sm font-medium transition-colors duration-150 py-1 ${
+                                    `text-xs md:text-[13px] font-medium transition-colors duration-150 py-1 ${
                                         isActive
                                             ? isDark
                                                 ? 'text-white border-b-2 border-white'
@@ -142,16 +142,16 @@ const Navbar = () => {
                             aria-label="Toggle theme"
                         >
                             {theme === 'dark' ? (
-                                <FiSun className="text-xl sm:text-[22px] text-yellow-400" />
+                                <FiSun className="text-lg sm:text-xl text-yellow-400" />
                             ) : (
-                                <FiMoon className="text-xl sm:text-[22px] text-blue-400" />
+                                <FiMoon className="text-lg sm:text-xl text-blue-400" />
                             )}
                         </button>
 
                         {isAdmin && (
                             <Link
                                 to="/admin"
-                                className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-semibold transition ${
+                                className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold transition ${
                                     isDark 
                                         ? 'border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20' 
                                         : 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100'
@@ -166,7 +166,7 @@ const Navbar = () => {
                         {/* Authentication Buttons (Desktop) */}
                         {user && (
                             <div className="hidden md:flex items-center gap-2">
-                                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs ${
+                                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs ${
                                     isDark ? 'border-white/10 bg-white/5 text-zinc-200' : 'border-slate-200 bg-slate-100 text-slate-700'
                                 }`}>
                                     <FiUser className="text-blue-400" />
@@ -177,10 +177,10 @@ const Navbar = () => {
                                 <button
                                     type="button"
                                     onClick={handleSignOut}
-                                    className="p-2 rounded-md border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all cursor-pointer flex items-center justify-center"
+                                    className="p-1.5 rounded-md border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all cursor-pointer flex items-center justify-center"
                                     title="Sign Out"
                                 >
-                                    <FiLogOut className="text-sm" />
+                                    <FiLogOut className="text-xs" />
                                 </button>
                             </div>
                         )}
@@ -199,23 +199,7 @@ const Navbar = () => {
                             {mobileMenuOpen ? <MdClose className="text-xl" /> : <MdMenu className="text-xl" />}
                         </button>
                     </div>
-                {isAdmin && (
-                                <NavLink
-                                    to="/admin"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className={({ isActive }) =>
-                                        `flex items-center gap-2 px-4 py-3 rounded-md text-lg font-semibold transition-all duration-200 ${
-                                            isActive
-                                                ? isDark ? 'bg-white text-black font-semibold shadow-sm' : 'bg-slate-900 text-white font-semibold shadow-sm'
-                                                : isDark ? 'text-blue-400 hover:text-white hover:bg-white/5' : 'text-blue-600 hover:text-slate-950 hover:bg-slate-100'
-                                        }`
-                                    }
-                                >
-                                    <FiShield />
-                                    <span>Admin Console</span>
-                                </NavLink>
-                            )}
-                        </nav>
+                </nav>
             </header>
 
             {/* Left-Side Mobile Navigation Drawer (Placed OUTSIDE header so backdrop-filter does NOT trap fixed positioning) */}
@@ -234,8 +218,8 @@ const Navbar = () => {
                     <aside
                         className={`md:hidden fixed inset-y-0 left-0 z-[100] w-72 max-w-[85vw] h-screen shadow-2xl flex flex-col p-6 animate-slideInLeft overflow-y-auto transition-colors duration-200 ${
                             isDark
-                                ? 'bg-[#000000] border-r border-zinc-800 text-[#ededf1]'
-                                : 'bg-white border-r border-slate-200 text-slate-900'
+                                ? 'bg-black border-r border-zinc-800 text-white'
+                                : 'bg-slate-50 border-r border-slate-200 text-gray-900'
                         }`}
                         role="dialog"
                         aria-modal="true"
@@ -294,6 +278,26 @@ const Navbar = () => {
                                     {link.name}
                                 </NavLink>
                             ))}
+                            {isAdmin && (
+                                <NavLink
+                                    to="/admin"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className={({ isActive }) =>
+                                        `flex items-center gap-2 px-3.5 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                                            isActive
+                                                ? isDark
+                                                    ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                                                    : 'bg-blue-600 text-white font-semibold shadow-sm'
+                                                : isDark
+                                                    ? 'text-blue-400 hover:text-white hover:bg-white/5'
+                                                    : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50'
+                                        }`
+                                    }
+                                >
+                                    <FiShield className="text-sm" />
+                                    <span>Admin Console</span>
+                                </NavLink>
+                            )}
                         </nav>
 
                         {/* Optional User Info & Sign Out (if logged in) */}

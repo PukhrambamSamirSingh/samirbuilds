@@ -198,8 +198,8 @@ const AdminDashboard = () => {
     const handleCredentialLogin = async (e) => {
         e.preventDefault()
         setAuthError('')
-        if (!emailInput.trim() || !passwordInput.trim()) {
-            setAuthError('Please enter both admin email and password.')
+        if (!emailInput.trim() || !passwordInput.trim() || !secretKeyInput.trim()) {
+            setAuthError('Please enter admin email, password, and the compulsory Admin Secret Key.')
             return
         }
 
@@ -208,7 +208,7 @@ const AdminDashboard = () => {
             await adminLoginApi({
                 email: emailInput.trim(),
                 password: passwordInput.trim(),
-                secret_key: secretKeyInput.trim() || undefined
+                secret_key: secretKeyInput.trim()
             })
             setAuthenticated(true)
             loadDashboardData()
@@ -500,19 +500,30 @@ const AdminDashboard = () => {
 
                                         <div>
                                             <label className={`block text-xs font-semibold mb-1.5 ${dark ? 'text-zinc-300' : 'text-slate-700'}`}>
-                                                Admin Secret Key (Optional if password matches admin root)
+                                                Admin Secret Key <span className='text-rose-500'>*</span>
                                             </label>
-                                            <input
-                                                type='password'
-                                                placeholder='Optional secret key'
-                                                value={secretKeyInput}
-                                                onChange={e => setSecretKeyInput(e.target.value)}
-                                                className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border outline-none transition ${
-                                                    dark 
-                                                        ? 'bg-black/60 border-white/10 text-white focus:border-blue-500' 
-                                                        : 'bg-white border-slate-300 text-slate-900 focus:border-blue-600'
-                                                }`}
-                                            />
+                                            <div className='relative'>
+                                                <input
+                                                    type={showSecretKey ? 'text' : 'password'}
+                                                    placeholder='Enter admin secret key'
+                                                    value={secretKeyInput}
+                                                    onChange={e => setSecretKeyInput(e.target.value)}
+                                                    required
+                                                    className={`w-full pl-3.5 pr-10 py-2.5 rounded-xl text-xs sm:text-sm border outline-none transition ${
+                                                        dark 
+                                                            ? 'bg-black/60 border-white/10 text-white focus:border-blue-500' 
+                                                            : 'bg-white border-slate-300 text-slate-900 focus:border-blue-600'
+                                                    }`}
+                                                />
+                                                <button
+                                                    type='button'
+                                                    onClick={() => setShowSecretKey(!showSecretKey)}
+                                                    className='absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition'
+                                                    aria-label='Toggle secret key visibility'
+                                                >
+                                                    {showSecretKey ? <FiEyeOff /> : <FiEye />}
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <button

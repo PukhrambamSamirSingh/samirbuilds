@@ -41,7 +41,7 @@ const Home = () => {
                                     Math, Design &
                                 </span>
                                 <span className="block mt-1 bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 bg-clip-text text-transparent">
-                                    Future Innovations.
+                                    The Math Behind the Tech.
                                 </span>
                             </h1>
 
@@ -57,14 +57,14 @@ const Home = () => {
                             {/* Action Buttons */}
                             <div className="flex flex-wrap items-center gap-3">
                                 <Link
-                                    to="/blogs"
+                                    to="/notes"
                                     className={`btn-primary group inline-flex items-center gap-2 font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-full transition-all duration-200 active:scale-[0.98] shadow-sm ${
                                         isDark
                                             ? 'bg-[#ededf1] hover:bg-white text-[#070708]'
                                             : 'bg-slate-900 hover:bg-black text-white'
                                     }`}
                                 >
-                                    <span>Explore Blogs</span>
+                                    <span>View Notes</span>
                                     <span className="text-base group-hover:translate-x-0.5 transition-transform">→</span>
                                 </Link>
                                 <Link

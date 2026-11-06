@@ -44,51 +44,52 @@ async def admin_login(data: AdminLoginRequest):
     provided_email = (data.email or "").strip().lower()
     provided_password = (data.password or "").strip()
 
-    admin_authenticated = False
+    # Admin Secret Key is strictly compulsory for all admin logins
+    if not provided_secret:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Admin Secret Key is compulsory. Please enter your Admin Secret Key."
+        )
+
+    if provided_secret != expected_secret:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Admin Secret Key. Access denied."
+        )
+
+    admin_authenticated = True
     admin_user_doc = None
 
-    # Path 1: Master Secret Key verification
-    if provided_secret and provided_secret == expected_secret:
-        admin_authenticated = True
+    # If email or password is provided (Admin Credentials flow), both must be verified
+    if provided_email or provided_password:
+        if not provided_email or not provided_password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Both administrator email and password are required when signing in with credentials."
+            )
 
-    # Path 2: Email & Password verification against db.users
-    if provided_email and provided_password:
         import re
         user_doc = await db.users.find_one({"email": {"$regex": f"^{re.escape(provided_email)}$", "$options": "i"}})
-        if user_doc and verify_password(provided_password, user_doc.get("password", "")):
-            # Check if this user is designated admin, has admin role, or master secret key was verified
-            is_designated_admin = (
-                user_doc.get("role") == "admin"
-                or user_doc.get("is_admin") is True
-                or provided_email == expected_email
-                or provided_email in ["robinsamir810@gmail.com", "pukhrambamsamir1@gmail.com"]
-                or admin_authenticated
-            )
-            if is_designated_admin:
-                admin_authenticated = True
-                admin_user_doc = user_doc
-            elif not admin_authenticated:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="This account does not have administrative privileges."
-                )
-        elif not admin_authenticated:
+        if not user_doc or not verify_password(provided_password, user_doc.get("password", "")):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password."
             )
 
-    # If neither authentication path succeeded
-    if not admin_authenticated:
-        if provided_secret:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid Admin Secret Key. Access denied."
-            )
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required. Please provide valid admin credentials or master secret key."
+        # Check if this user is designated admin or has admin role
+        is_designated_admin = (
+            user_doc.get("role") == "admin"
+            or user_doc.get("is_admin") is True
+            or provided_email == expected_email
+            or provided_email in ["robinsamir810@gmail.com", "pukhrambamsamir1@gmail.com"]
         )
+        if not is_designated_admin:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This account does not have administrative privileges."
+            )
+
+        admin_user_doc = user_doc
 
     admin_email = provided_email or (admin_user_doc.get("email") if admin_user_doc else None) or expected_email
     user_id = None

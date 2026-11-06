@@ -434,7 +434,7 @@ function BackpropVideoAnimation() {
       : 86; // self.play(Write(formulas))
 
   return (
-    <div className="mlp-video-card" style={{ background: "#101116", borderColor: "rgba(255, 255, 255, 0.12)" }}>
+    <div className="mlp-video-card" style={{ background: "#101116", border: "none", boxShadow: "none" }}>
       {/* Top Status & View Selector Bar */}
       <div className="mlp-video-topbar" style={{ background: "rgba(255, 255, 255, 0.02)", borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
         <div className="mlp-video-pill" style={{ background: "rgba(88, 196, 221, 0.15)", color: "#58c4dd", borderColor: "rgba(88, 196, 221, 0.35)" }}>
@@ -1568,7 +1568,7 @@ function GradientDescentVideoAnimation() {
   const fillD2D = `${pathD2D} L ${lastPt2D[0]},${axisY2D} L ${firstPt2D[0]},${axisY2D} Z`;
 
   return (
-    <div className="mlp-video-card" style={{ background: "#101116", borderColor: "rgba(255, 255, 255, 0.12)", marginTop: "10px" }}>
+    <div className="mlp-video-card" style={{ background: "#101116", border: "none", boxShadow: "none", marginTop: "10px" }}>
       {/* Top Status & 2D / 3D Switcher Bar */}
       <div className="mlp-video-topbar" style={{ background: "rgba(255, 255, 255, 0.02)", borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
         <div className="mlp-video-pill" style={{ background: "rgba(131, 193, 103, 0.15)", color: "#83c167", borderColor: "rgba(131, 193, 103, 0.35)" }}>
